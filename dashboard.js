@@ -187,8 +187,14 @@ function openEditModal(type, id) {
         createField('Golos', 'golos', item.golos, 'number');
         createField('Assistências', 'assistencias', item.assistencias, 'number');
         createField('Amarelos', 'amarelos', item.amarelos, 'number');
-        createField('Vermelhos', 'vermelhos', item.vermelhos, 'number');
-        createField('Minutos Jogados', 'minutos_jogados', item.minutos_jogados, 'number'); // Adicionado o novo campo
+        createField('Vermelhos', 'vermelho', item.vermelho, 'number');
+        createField('Minutos Jogados', 'minutos_jogados', item.minutos_jogados, 'number');
+        
+        if (item.posicao && item.posicao.includes('guarda-redes')) {
+            createField('Golos Sofridos', 'golos_sofridos', item.golos_sofridos, 'number');
+            createField('Média GS por Jogo', 'media_gs', item.media_gs, 'number');
+        }
+
     } else if (type === 'Seleção') {
         createField('País', 'pais', item.pais);
         createField('Torneio', 'torneio', item.torneio);
@@ -224,9 +230,22 @@ async function saveChanges(event) {
         }
     }
 
-    // Calcula a média GM do jogador se os campos existirem
-    if (table === 'jogadores' && updatedData.jogos > 0) {
-        updatedData.media_gm = updatedData.golos / updatedData.jogos;
+    if (table === 'jogadores') {
+        const currentJogos = parseInt(updatedData.jogos);
+        const currentGolos = parseInt(updatedData.golos);
+        const currentGolosSofridos = parseInt(updatedData.golos_sofridos);
+        
+        if (currentJogos > 0) {
+            updatedData.media_gm = (currentGolos / currentJogos).toFixed(2);
+        } else {
+            updatedData.media_gm = 0;
+        }
+
+        if (updatedData.posicao && updatedData.posicao.includes('guarda-redes') && currentJogos > 0) {
+            updatedData.media_gs = (currentGolosSofridos / currentJogos).toFixed(2);
+        } else if (updatedData.posicao && !updatedData.posicao.includes('guarda-redes')) {
+            updatedData.media_gs = 0;
+        }
     }
 
     const { data, error } = await supabase

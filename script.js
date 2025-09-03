@@ -101,6 +101,8 @@ async function saveJogador(event) {
         assistencias: 0,
         amarelos: 0,
         vermelho: 0,
+        minutos_jogados: 0,
+        golos_sofridos: 0,
         media_gm: 0,
         media_gs: 0
     };
@@ -327,3 +329,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadEquipas();
 });
+
