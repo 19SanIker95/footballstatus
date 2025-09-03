@@ -10,6 +10,7 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
+// Função para mostrar o formulário correto
 function showForm() {
     const selected = document.getElementById('menu-select').value;
     document.querySelectorAll('.form-section').forEach(form => {
@@ -21,36 +22,40 @@ function showForm() {
     }
 }
 
-// Carrega clubes e seleções para o menu suspenso
+
+// NOVA FUNÇÃO: Carrega clubes e seleções para o menu suspenso
 async function loadEquipas() {
-    try {
-        const { data: clubes, error: clubesError } = await supabase.from('clubes').select('nome');
-        if (clubesError) throw clubesError;
+    const { data: clubes, error: clubesError } = await supabase.from('clubes').select('nome');
+    const { data: selecoes, error: selecoesError } = await supabase.from('selecoes').select('pais');
 
-        const { data: selecoes, error: selecoesError } = await supabase.from('selecoes').select('pais');
-        if (selecoesError) throw selecoesError;
-        
-        const equipas = [
-            ...(clubes?.map(c => c.nome) || []),
-            ...(selecoes?.map(s => s.pais) || [])
-        ];
+    if (clubesError) console.error("Erro a carregar clubes:", clubesError);
+    if (selecoesError) console.error("Erro a carregar seleções:", selecoesError);
 
-        const selectElement = document.getElementById('equipa-analisada');
-        selectElement.innerHTML = '<option value="">-- Selecione uma equipa --</option>';
-        
-        equipas.sort().forEach(equipa => {
-            const option = document.createElement('option');
-            option.value = equipa;
-            option.textContent = equipa;
-            selectElement.appendChild(option);
-        });
+    const equipas = [
+        ...(clubes?.map(c => c.nome) || []),
+        ...(selecoes?.map(s => s.pais) || [])
+    ];
 
-    } catch (error) {
-        console.error('Erro ao carregar equipas:', error.message);
-    }
+    const selectElement = document.getElementById('equipa-analisada');
+    selectElement.innerHTML = '<option value="">-- Selecione uma equipa --</option>';
+
+    equipas.sort().forEach(equipa => {
+        const option = document.createElement('option');
+        option.value = equipa;
+        option.textContent = equipa;
+        selectElement.appendChild(option);
+    });
 }
 
-// Carrega os jogadores de uma equipa específica
+function loadEquipas() {
+    console.log("Função loadEquipas chamada!");
+    return Promise.resolve(); // só para simular
+}
+
+window.loadEquipas = loadEquipas;
+console.log("Função loadEquipas exposta no window");
+
+// NOVA FUNÇÃO: Carrega os jogadores de uma equipa específica
 async function loadJogadoresPorEquipa() {
     const equipaNome = document.getElementById('equipa-analisada').value;
     const selectMarcadores = document.getElementById('marcadores');
@@ -80,7 +85,7 @@ async function loadJogadoresPorEquipa() {
     }
 }
 
-// Funções de guardar dados (save...)
+// Jogadores
 async function saveJogador(event) {
     event.preventDefault();
 
@@ -101,13 +106,13 @@ async function saveJogador(event) {
         golos: 0,
         assistencias: 0,
         amarelos: 0,
-        vermelho: 0,
+        vermelhos: 0,
         media_gm: 0,
         media_gs: 0
     };
 
     const { data, error } = await supabase
-        .from('jogadores')
+        .from('clubes_selecoes')
         .insert([playerData])
         .select();
 
@@ -120,6 +125,7 @@ async function saveJogador(event) {
     }
 }
 
+// Clubes
 async function saveClube(event) {
     event.preventDefault();
 
@@ -155,10 +161,11 @@ async function saveClube(event) {
     } else {
         alert('Clube adicionado com sucesso!');
         event.target.reset();
-        await loadEquipas();
+        await loadEquipas(); // Recarrega a lista para incluir o novo clube
     }
 }
 
+// Seleções
 async function saveSelecao(event) {
     event.preventDefault();
 
@@ -194,16 +201,18 @@ async function saveSelecao(event) {
     } else {
         alert('Seleção adicionada com sucesso!');
         event.target.reset();
-        await loadEquipas();
+        await loadEquipas(); // Recarrega a lista para incluir a nova seleção
     }
 }
 
+// Jogos - Agora lê o valor do menu suspenso
 async function saveJogo(event) {
     event.preventDefault();
 
     const data_jogo = document.getElementById('data-jogo').value;
     const equipa_analisada = document.getElementById('equipa-analisada').value;
     
+    // Obtém os jogadores selecionados
     const marcadoresElement = document.getElementById('marcadores');
     const marcadores = Array.from(marcadoresElement.selectedOptions).map(option => option.value);
 
@@ -231,7 +240,7 @@ async function saveJogo(event) {
         resultado,
         cantos_fav,
         cantos_cont,
-        marcadores: marcadores.join(', ')
+        marcadores: marcadores.join(', ') // Salva os marcadores como uma string
     };
 
     const { data, error } = await supabase
@@ -245,9 +254,17 @@ async function saveJogo(event) {
     } else {
         alert('Jogo adicionado com sucesso!');
         event.target.reset();
-        await loadJogadoresPorEquipa();
+        await loadJogadoresPorEquipa(); // Limpa a lista de jogadores após submeter
     }
 }
+// Event Listeners
+document.querySelector('#clubes-form form').addEventListener('submit', saveClube);
+document.querySelector('#selecoes-form form').addEventListener('submit', saveSelecao);
+document.getElementById('jogadores-form').addEventListener('submit', saveJogador);
+document.getElementById('jogos-form').addEventListener('submit', saveJogo); // NOVO Event Listener
+//document.getElementById('menu-select').addEventListener('change', showForm);
+
+
 
 // Adicionar event listeners quando o DOM estiver totalmente carregado
 document.addEventListener('DOMContentLoaded', () => {
