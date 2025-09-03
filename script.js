@@ -21,7 +21,6 @@ function showForm() {
     }
 }
 
-// Carrega clubes e seleções para o menu suspenso
 async function loadEquipas() {
     try {
         const { data: clubes, error: clubesError } = await supabase.from('clubes').select('nome');
@@ -50,11 +49,10 @@ async function loadEquipas() {
     }
 }
 
-// Carrega os jogadores de uma equipa específica
 async function loadJogadoresPorEquipa() {
     const equipaNome = document.getElementById('equipa-analisada').value;
-    const selectMarcadores = document.getElementById('marcadores');
-    selectMarcadores.innerHTML = ''; // Limpa a lista anterior
+    const inputsContainer = document.getElementById('marcadores-inputs');
+    inputsContainer.innerHTML = '';
 
     if (!equipaNome) {
         return;
@@ -69,10 +67,13 @@ async function loadJogadoresPorEquipa() {
         if (error) throw error;
 
         jogadores.forEach(jogador => {
-            const option = document.createElement('option');
-            option.value = jogador.nome;
-            option.textContent = jogador.nome;
-            selectMarcadores.appendChild(option);
+            const div = document.createElement('div');
+            div.className = 'flex items-center space-x-2';
+            div.innerHTML = `
+                <label class="w-1/2">${jogador.nome}:</label>
+                <input type="number" name="golo_${jogador.nome.replace(/\s/g, '_')}" value="0" min="0" class="w-1/2 form-input border border-gray-300 rounded p-1">
+            `;
+            inputsContainer.appendChild(div);
         });
 
     } catch (error) {
@@ -80,7 +81,6 @@ async function loadJogadoresPorEquipa() {
     }
 }
 
-// Funções de guardar dados (save...)
 async function saveJogador(event) {
     event.preventDefault();
 
@@ -202,10 +202,20 @@ async function saveJogo(event) {
     event.preventDefault();
 
     const data_jogo = document.getElementById('data-jogo').value;
+    const local = document.getElementById('local').value;
     const equipa_analisada = document.getElementById('equipa-analisada').value;
     
-    const marcadoresElement = document.getElementById('marcadores');
-    const marcadores = Array.from(marcadoresElement.selectedOptions).map(option => option.value);
+    const marcadoresInputs = document.querySelectorAll('#marcadores-inputs input');
+    const marcadores = {};
+    let totalGolosMarcados = 0;
+    marcadoresInputs.forEach(input => {
+        const nomeJogador = input.name.replace('golo_', '').replace(/_/g, ' ');
+        const golos = parseInt(input.value);
+        if (golos > 0) {
+            marcadores[nomeJogador] = golos;
+            totalGolosMarcados += golos;
+        }
+    });
 
     const equipa_adversaria = document.getElementById('equipa-adversaria').value;
     const golo_equipa_analisada = parseInt(document.getElementById('golo-equipa-analisada').value);
@@ -224,6 +234,7 @@ async function saveJogo(event) {
 
     const jogoData = {
         data_jogo,
+        local,
         equipa_analisada,
         equipa_adversaria,
         golo_equipa_analisada,
@@ -231,25 +242,83 @@ async function saveJogo(event) {
         resultado,
         cantos_fav,
         cantos_cont,
-        marcadores: marcadores.join(', ')
+        marcadores: JSON.stringify(marcadores)
     };
 
-    const { data, error } = await supabase
-        .from('jogos')
-        .insert([jogoData])
-        .select();
+    try {
+        const { error: jogoError } = await supabase
+            .from('jogos')
+            .insert([jogoData]);
+        if (jogoError) throw jogoError;
 
-    if (error) {
-        console.error('Erro:', error);
-        alert('Erro ao adicionar jogo: ' + error.message);
-    } else {
-        alert('Jogo adicionado com sucesso!');
+        let tableToUpdate = equipa_analisada.includes(' ') ? 'clubes' : 'selecoes';
+        let keyColumn = tableToUpdate === 'clubes' ? 'nome' : 'pais';
+
+        const { data: currentEquipa, error: equipaError } = await supabase
+            .from(tableToUpdate)
+            .select('*')
+            .eq(keyColumn, equipa_analisada)
+            .single();
+        if (equipaError) throw equipaError;
+
+        const updatedEquipaData = {
+            jogos: currentEquipa.jogos + 1,
+            vitorias: currentEquipa.vitorias + (resultado === 'Vitória' ? 1 : 0),
+            empates: currentEquipa.empates + (resultado === 'Empate' ? 1 : 0),
+            derrotas: currentEquipa.derrotas + (resultado === 'Derrota' ? 1 : 0),
+            gmarcados: currentEquipa.gmarcados + golo_equipa_analisada,
+            gsofridos: currentEquipa.gsofridos + golo_adversario,
+            dif_golos: currentEquipa.dif_golos + (golo_equipa_analisada - golo_adversario),
+            cantos_fav: currentEquipa.cantos_fav + cantos_fav,
+            cantos_cont: currentEquipa.cantos_cont + cantos_cont
+        };
+
+        // Adicionada a verificação para evitar divisão por zero
+        if (updatedEquipaData.jogos > 0) {
+            updatedEquipaData.media_gm = updatedEquipaData.gmarcados / updatedEquipaData.jogos;
+            updatedEquipaData.media_gs = updatedEquipaData.gsofridos / updatedEquipaData.jogos;
+        }
+
+        const { error: updateEquipaError } = await supabase
+            .from(tableToUpdate)
+            .update(updatedEquipaData)
+            .eq(keyColumn, equipa_analisada);
+        if (updateEquipaError) throw updateEquipaError;
+
+        for (const [nomeJogador, golosMarcados] of Object.entries(marcadores)) {
+            const { data: currentPlayer, error: playerError } = await supabase
+                .from('jogadores')
+                .select('*')
+                .eq('nome', nomeJogador)
+                .single();
+            if (playerError) throw playerError;
+
+            const updatedPlayerData = {
+                jogos: currentPlayer.jogos + 1,
+                golos: currentPlayer.golos + golosMarcados
+            };
+
+            // Adicionada a verificação para evitar divisão por zero
+            if (updatedPlayerData.jogos > 0) {
+                updatedPlayerData.media_gm = updatedPlayerData.golos / updatedPlayerData.jogos;
+            }
+
+            const { error: updatePlayerError } = await supabase
+                .from('jogadores')
+                .update(updatedPlayerData)
+                .eq('nome', nomeJogador);
+            if (updatePlayerError) throw updatePlayerError;
+        }
+
+        alert('Jogo adicionado e estatísticas atualizadas com sucesso!');
         event.target.reset();
-        await loadJogadoresPorEquipa();
+        loadJogadoresPorEquipa();
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao adicionar jogo ou atualizar estatísticas: ' + error.message);
     }
 }
 
-// Adicionar event listeners quando o DOM estiver totalmente carregado
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('menu-select').addEventListener('change', showForm);
     document.getElementById('clubes-form').addEventListener('submit', saveClube);

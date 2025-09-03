@@ -117,7 +117,7 @@
 
         <div id="clubes-form" class="form-section p-6 border border-gray-200 rounded-lg">
             <h2 class="text-2xl font-semibold mb-4 text-gray-700">Adicionar Clube</h2>
-            <form onsubmit="saveClube(event)">
+            <form>
                 <div class="mb-4">
                     <label for="liga">Liga:</label>
                     <input type="text" id="liga" name="liga" class="form-input">
@@ -136,7 +136,7 @@
 
         <div id="selecoes-form" class="form-section p-6 border border-gray-200 rounded-lg">
             <h2 class="text-2xl font-semibold mb-4 text-gray-700">Adicionar Seleção</h2>
-            <form onsubmit="saveSelecao(event)">
+            <form>
                 <div class="mb-4">
                     <label for="pais">País:</label>
                     <input type="text" id="pais" name="pais" class="form-input">
@@ -155,7 +155,7 @@
 
         <div id="jogadores-form" class="form-section p-6 border border-gray-200 rounded-lg">
             <h2 class="text-2xl font-semibold mb-4 text-gray-700">Adicionar Jogador</h2>
-            <form onsubmit="saveJogador(event)">
+            <form>
                 <div class="mb-4">
                     <label for="jogador-nome" class="block text-gray-600 mb-1">Nome:</label>
                     <input type="text" id="jogador-nome" name="nome" class="form-input">
@@ -199,21 +199,29 @@
 
         <div id="jogos-form" class="form-section p-6 border rounded-lg bg-gray-50" style="display: none;">
             <h2 class="text-xl font-semibold mb-4">Adicionar Jogo</h2>
-            <form onsubmit="saveJogo(event)">
+            <form>
                 <div class="mb-4">
                     <label for="data-jogo" class="block text-gray-600">Data do Jogo:</label>
                     <input type="date" id="data-jogo" name="data_jogo" class="form-input mt-1 block w-full border border-gray-300 rounded p-2" required>
                 </div>
+                
+                <div class="mb-4">
+                    <label for="local" class="block text-gray-600">Local do Jogo:</label>
+                    <input type="text" id="local" name="local" class="form-input mt-1 block w-full border border-gray-300 rounded p-2" required>
+                </div>
+                
                 <div class="mb-4">
                     <label for="equipa-analisada" class="block text-gray-600">Equipa Analisada:</label>
                     <select id="equipa-analisada" name="equipa_analisada" class="form-select mt-1 block w-full border border-gray-300 rounded p-2" required>
                         </select>
                 </div>
+                
                 <div class="mb-4">
-                    <label for="marcadores" class="block text-gray-600">Jogadores que Marcaram:</label>
-                    <select id="marcadores" name="marcadores" class="form-select mt-1 block w-full border border-gray-300 rounded p-2" multiple>
-                        </select>
+                    <label class="block text-gray-600">Golos por Jogador:</label>
+                    <div id="marcadores-inputs" class="space-y-2 p-2 border border-gray-300 rounded-md">
+                        </div>
                 </div>
+                
                 <div class="mb-4">
                     <label for="equipa-adversaria" class="block text-gray-600">Equipa Adversária:</label>
                     <input type="text" id="equipa-adversaria" name="equipa_adversaria" class="form-input mt-1 block w-full border border-gray-300 rounded p-2" required>
@@ -240,12 +248,10 @@
 
     </div>
     
-<!-- Chamamento do file script -->    
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="script.js"></script>
 
 
-<!-- Show Menu -->
 <script>
 function showForm() {
     // Esconde todos os formulários
