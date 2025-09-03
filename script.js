@@ -7,7 +7,6 @@
 const supabaseUrl = 'https://cbmwzkldgizpttmkkcsf.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibXd6a2xkZ2l6cHR0bWtrY3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4MTkxMDAsImV4cCI6MjA3MjM5NTEwMH0.qk4gDHL0UQ9mvc6kdAN_g4071yz_WhJ8TCdR9HTD2vY';
 
-
 const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
 function showForm() {
@@ -273,7 +272,6 @@ async function saveJogo(event) {
             cantos_cont: currentEquipa.cantos_cont + cantos_cont
         };
 
-        // Adicionada a verificação para evitar divisão por zero
         if (updatedEquipaData.jogos > 0) {
             updatedEquipaData.media_gm = updatedEquipaData.gmarcados / updatedEquipaData.jogos;
             updatedEquipaData.media_gs = updatedEquipaData.gsofridos / updatedEquipaData.jogos;
@@ -298,7 +296,6 @@ async function saveJogo(event) {
                 golos: currentPlayer.golos + golosMarcados
             };
 
-            // Adicionada a verificação para evitar divisão por zero
             if (updatedPlayerData.jogos > 0) {
                 updatedPlayerData.media_gm = updatedPlayerData.golos / updatedPlayerData.jogos;
             }

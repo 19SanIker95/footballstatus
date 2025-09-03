@@ -94,7 +94,7 @@ function renderData(data) {
                 <span class="text-xs font-semibold px-2 py-1 bg-blue-100 text-blue-800 rounded-full">${type}</span>
             </div>
             <p class="text-sm text-gray-600"><strong>Jogos:</strong> ${item.jogos || 0}</p>
-            <p class="text-sm text-gray-600"><strong>Golos:</strong> ${item.golos || item.golos_marcados || 0}</p>
+            <p class="text-sm text-gray-600"><strong>Golos:</strong> ${item.golos || item.gmarcados || 0}</p>
             <div class="mt-4 flex gap-2">
                 <button onclick="openDetailsModal('${type}', '${idToPass}')" class="px-3 py-1 text-sm bg-blue-600 text-white rounded-md">Detalhes</button>
                 <button onclick="openEditModal('${type}', '${idToPass}')" class="px-3 py-1 text-sm bg-yellow-400 text-white rounded-md">Editar</button>
@@ -112,7 +112,6 @@ function findItemById(type, id) {
     return null;
 }
 
-// Nova função para abrir o modal de detalhes
 function openDetailsModal(type, id) {
     const item = findItemById(type, id);
     if (!item) {
@@ -120,7 +119,6 @@ function openDetailsModal(type, id) {
         return;
     }
 
-    // Oculta o formulário de edição e mostra o div de detalhes
     document.getElementById('edit-form').classList.add('hidden');
     document.getElementById('details-content').classList.remove('hidden');
 
@@ -128,15 +126,12 @@ function openDetailsModal(type, id) {
     const detailsContainer = document.getElementById('details-content');
     detailsContainer.innerHTML = '';
 
-    // Itera sobre as chaves do objeto para mostrar todos os dados
     for (const key in item) {
         if (Object.prototype.hasOwnProperty.call(item, key) && key !== 'id') {
             const detailItem = document.createElement('p');
             detailItem.className = 'text-gray-700';
             
-            // Formata o nome da chave para ser mais legível
             const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-
             detailItem.innerHTML = `<strong class="text-gray-900">${label}:</strong> ${item[key]}`;
             detailsContainer.appendChild(detailItem);
         }
@@ -146,7 +141,6 @@ function openDetailsModal(type, id) {
     document.getElementById('edit-modal').classList.add('flex');
 }
 
-
 function openEditModal(type, id) {
     const item = findItemById(type, id);
     if (!item) {
@@ -154,7 +148,6 @@ function openEditModal(type, id) {
         return;
     }
 
-    // Oculta o div de detalhes e mostra o formulário de edição
     document.getElementById('edit-form').classList.remove('hidden');
     document.getElementById('details-content').classList.add('hidden');
 
@@ -182,8 +175,8 @@ function openEditModal(type, id) {
         createField('Vitórias', 'vitorias', item.vitorias, 'number');
         createField('Empates', 'empates', item.empates, 'number');
         createField('Derrotas', 'derrotas', item.derrotas, 'number');
-        createField('Golos Marcados', 'golos_marcados', item.golos_marcados, 'number');
-        createField('Golos Sofridos', 'golos_sofridos', item.golos_sofridos, 'number');
+        createField('Golos Marcados', 'gmarcados', item.gmarcados, 'number');
+        createField('Golos Sofridos', 'gsofridos', item.gsofridos, 'number');
     } else if (type === 'Jogador') {
         createField('Nome', 'nome', item.nome);
         createField('Posição', 'posicao', item.posicao);
@@ -194,9 +187,8 @@ function openEditModal(type, id) {
         createField('Golos', 'golos', item.golos, 'number');
         createField('Assistências', 'assistencias', item.assistencias, 'number');
         createField('Amarelos', 'amarelos', item.amarelos, 'number');
-        createField('Vermelhos', 'vermelho', item.vermelho, 'number');
-        createField('Media Golos Marcados', 'media_gm', item.media_gm, 'number');
-        createField('Media Golos Sofridos', 'media_gs', item.media_gs, 'number');
+        createField('Vermelhos', 'vermelhos', item.vermelhos, 'number');
+        createField('Minutos Jogados', 'minutos_jogados', item.minutos_jogados, 'number'); // Adicionado o novo campo
     } else if (type === 'Seleção') {
         createField('País', 'pais', item.pais);
         createField('Torneio', 'torneio', item.torneio);
@@ -205,8 +197,8 @@ function openEditModal(type, id) {
         createField('Vitórias', 'vitorias', item.vitorias, 'number');
         createField('Empates', 'empates', item.empates, 'number');
         createField('Derrotas', 'derrotas', item.derrotas, 'number');
-        createField('Golos Marcados', 'golos_marcados', item.golos_marcados, 'number');
-        createField('Golos Sofridos', 'golos_sofridos', item.golos_sofridos, 'number');
+        createField('Golos Marcados', 'gmarcados', item.gmarcados, 'number');
+        createField('Golos Sofridos', 'gsofridos', item.gsofridos, 'number');
     }
 
     document.getElementById('edit-modal').classList.remove('hidden');
@@ -230,6 +222,11 @@ async function saveChanges(event) {
         if (field.name) {
             updatedData[field.name] = field.type === 'number' ? parseInt(field.value) : field.value;
         }
+    }
+
+    // Calcula a média GM do jogador se os campos existirem
+    if (table === 'jogadores' && updatedData.jogos > 0) {
+        updatedData.media_gm = updatedData.golos / updatedData.jogos;
     }
 
     const { data, error } = await supabase

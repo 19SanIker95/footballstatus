@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
+         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
@@ -96,110 +96,67 @@
         .form-section {
             display: none;
         }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .container { max-width: 800px; margin: 2rem auto; padding: 2rem; background-color: #fff; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .form-section { display: none; margin-bottom: 2rem; }
+        .btn-primary { background-color: #2563eb; color: #fff; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s ease-in-out; }
+        .btn-primary:hover { background-color: #1e40af; }
+        .btn-secondary { background-color: #9ca3af; color: #fff; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s ease-in-out; }
+        .btn-secondary:hover { background-color: #6b7280; }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
     <div class="container mx-auto p-8 bg-white rounded-lg shadow-md">
         <h1 class="text-4xl font-bold text-center text-blue-800 mb-6">Gestor de Estatísticas de Futebol</h1>
-    <div class="mb-6 text-center">
-        <a href="dashboard.html" class="inline-block btn-secondary">Ver Dashboard</a>
-    </div>
+        <div class="mb-6 text-center">
+            <a href="dashboard.html" class="inline-block btn-secondary">Ver Dashboard</a>
+        </div>
 
         <div class="mb-6 flex justify-center">
-            <select id="menu-select" onchange="showForm()" class="form-select max-w-sm">
-            <option value="">-- Selecione a secção --</option>
-            <option value="clubes">Clubes</option>
-            <option value="selecoes">Seleções</option>
-            <option value="jogadores">Jogadores</option>
-            <option value="jogos">Jogos</option>
+            <select id="menu-select" class="form-select max-w-sm">
+                <option value="">-- Selecione a secção --</option>
+                <option value="clubes">Clubes</option>
+                <option value="selecoes">Seleções</option>
+                <option value="jogadores">Jogadores</option>
+                <option value="jogos">Jogos</option>
             </select>
         </div>
 
-        <div id="clubes-form" class="form-section p-6 border border-gray-200 rounded-lg">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Adicionar Clube</h2>
-            <form>
-                <div class="mb-4">
-                    <label for="liga">Liga:</label>
-                    <input type="text" id="liga" name="liga" class="form-input">
-                </div>
-                <div class="mb-4">
-                    <label for="clube-nome">Nome:</label>
-                    <input type="text" id="clube-nome" name="nome" class="form-input">
-                </div>
-                <div class="mb-4">
-                    <label for="clube-epoca">Época:</label>
-                    <input type="text" id="clube-epoca" name="epoca" class="form-input">
-                </div>
+        <div id="clubes-form" class="form-section p-6 border rounded-lg bg-gray-50">
+            <h2 class="text-xl font-semibold mb-4">Adicionar Clube</h2>
+            <form id="clube-form-id">
+                <div class="mb-4"><label for="liga">Liga:</label><input type="text" id="liga" name="liga" class="form-input"></div>
+                <div class="mb-4"><label for="clube-nome">Nome:</label><input type="text" id="clube-nome" name="nome" class="form-input"></div>
+                <div class="mb-4"><label for="clube-epoca">Época:</label><input type="text" id="clube-epoca" name="epoca" class="form-input"></div>
                 <button type="submit" class="btn-primary w-full">Adicionar Clube</button>
             </form>
         </div>
 
-        <div id="selecoes-form" class="form-section p-6 border border-gray-200 rounded-lg">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Adicionar Seleção</h2>
-            <form>
-                <div class="mb-4">
-                    <label for="pais">País:</label>
-                    <input type="text" id="pais" name="pais" class="form-input">
-                </div>
-                <div class="mb-4">
-                    <label for="torneio">Torneio:</label>
-                    <input type="text" id="torneio" name="torneio" class="form-input">
-                </div>
-                <div class="mb-4">
-                    <label for="selecao-epoca">Época:</label>
-                    <input type="text" id="selecao-epoca" name="epoca" class="form-input">
-                </div>
+        <div id="selecoes-form" class="form-section p-6 border rounded-lg bg-gray-50">
+            <h2 class="text-xl font-semibold mb-4">Adicionar Seleção</h2>
+            <form id="selecao-form-id">
+                <div class="mb-4"><label for="pais">País:</label><input type="text" id="pais" name="pais" class="form-input"></div>
+                <div class="mb-4"><label for="torneio">Torneio:</label><input type="text" id="torneio" name="torneio" class="form-input"></div>
+                <div class="mb-4"><label for="selecao-epoca">Época:</label><input type="text" id="selecao-epoca" name="epoca" class="form-input"></div>
                 <button type="submit" class="btn-primary w-full">Adicionar Seleção</button>
             </form>
         </div>
 
-        <div id="jogadores-form" class="form-section p-6 border border-gray-200 rounded-lg">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Adicionar Jogador</h2>
-            <form>
-                <div class="mb-4">
-                    <label for="jogador-nome" class="block text-gray-600 mb-1">Nome:</label>
-                    <input type="text" id="jogador-nome" name="nome" class="form-input">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-600 mb-2">Posição:</label>
-                    <div class="flex flex-wrap gap-4">
-                        <label class="flex items-center">
-                            <input type="checkbox" id="avancado" name="posicao" value="avancado" class="mr-2">
-                            Avançado
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" id="medio" name="posicao" value="medio" class="mr-2">
-                            Médio
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" id="defesa" name="posicao" value="defesa" class="mr-2">
-                            Defesa
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" id="guarda-redes" name="posicao" value="guarda-redes" class="mr-2">
-                            Guarda-redes
-                        </label>
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <label for="clube-selecao" class="block text-gray-600 mb-1">Clube ou Seleção:</label>
-                    <input type="text" id="clube-selecao" name="clube-selecao" class="form-input">
-                </div>
-                <div class="mb-4">
-                    <label for="data-nascimento" class="block text-gray-600 mb-1">Data de Nascimento:</label>
-                    <input type="text" id="data-nascimento" name="data-nascimento" class="form-input" placeholder="AAAA-MM-DD">
-                </div>
-                <div class="mb-4">
-                    <label for="nacionalidade" class="block text-gray-600 mb-1">Nacionalidade:</label>
-                    <input type="text" id="nacionalidade" name="nacionalidade" class="form-input">
-                </div>
+        <div id="jogadores-form" class="form-section p-6 border rounded-lg bg-gray-50">
+            <h2 class="text-xl font-semibold mb-4">Adicionar Jogador</h2>
+            <form id="jogador-form-id">
+                <div class="mb-4"><label for="jogador-nome" class="block text-gray-600 mb-1">Nome:</label><input type="text" id="jogador-nome" name="nome" class="form-input"></div>
+                <div class="mb-4"><label class="block text-gray-600 mb-2">Posição:</label><div class="flex flex-wrap gap-4"><label class="flex items-center"><input type="checkbox" id="avancado" name="posicao" value="avancado" class="mr-2">Avançado</label><label class="flex items-center"><input type="checkbox" id="medio" name="posicao" value="medio" class="mr-2">Médio</label><label class="flex items-center"><input type="checkbox" id="defesa" name="posicao" value="defesa" class="mr-2">Defesa</label><label class="flex items-center"><input type="checkbox" id="guarda-redes" name="posicao" value="guarda-redes" class="mr-2">Guarda-redes</label></div></div>
+                <div class="mb-4"><label for="clube-selecao" class="block text-gray-600 mb-1">Clube ou Seleção:</label><input type="text" id="clube-selecao" name="clube-selecao" class="form-input"></div>
+                <div class="mb-4"><label for="data-nascimento" class="block text-gray-600 mb-1">Data de Nascimento:</label><input type="text" id="data-nascimento" name="data-nascimento" class="form-input" placeholder="AAAA-MM-DD"></div>
+                <div class="mb-4"><label for="nacionalidade" class="block text-gray-600 mb-1">Nacionalidade:</label><input type="text" id="nacionalidade" name="nacionalidade" class="form-input"></div>
                 <button type="submit" class="btn-primary w-full">Adicionar Jogador</button>
             </form>
         </div>
 
-        <div id="jogos-form" class="form-section p-6 border rounded-lg bg-gray-50" style="display: none;">
+        <div id="jogos-form" class="form-section p-6 border rounded-lg bg-gray-50">
             <h2 class="text-xl font-semibold mb-4">Adicionar Jogo</h2>
-            <form>
+            <form id="jogos-form-id">
                 <div class="mb-4">
                     <label for="data-jogo" class="block text-gray-600">Data do Jogo:</label>
                     <input type="date" id="data-jogo" name="data_jogo" class="form-input mt-1 block w-full border border-gray-300 rounded p-2" required>
@@ -248,32 +205,7 @@
 
     </div>
     
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script.js"></script>
-
-
-<script>
-function showForm() {
-    // Esconde todos os formulários
-    document.querySelectorAll('.form-section').forEach(section => {
-        section.style.display = 'none';
-    });
-
-    // Vai buscar a opção selecionada
-    const selected = document.getElementById('menu-select').value;
-
-    // Mostra o formulário correspondente
-    if (selected) {
-        document.getElementById(selected + '-form').style.display = 'block';
-    }
-}
-
-// Esconde os formulários ao carregar a página
-window.onload = () => {
-    document.querySelectorAll('.form-section').forEach(section => {
-        section.style.display = 'none';
-    });
-};
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
 </body>
 </html>
