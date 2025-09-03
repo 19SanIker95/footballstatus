@@ -34,6 +34,7 @@ async function fetchDataFromSupabase() {
 function applyFilters() {
     const filterType = document.getElementById('filter-type').value;
     const filterQuery = document.getElementById('filter-query').value.toLowerCase();
+    const sortOrder = document.getElementById('sort-order').value; // NOVO: Ler o filtro de ordenação
     
     let filteredData = [];
 
@@ -64,6 +65,22 @@ function applyFilters() {
         filteredData = filteredData.concat(jogadoresFiltered);
     }
     
+    // NOVO: Lógica de ordenação
+    if (sortOrder) {
+        filteredData.sort((a, b) => {
+            const nameA = (a.nome || a.pais || '').toLowerCase();
+            const nameB = (b.nome || b.pais || '').toLowerCase();
+
+            if (nameA < nameB) {
+                return sortOrder === 'asc' ? -1 : 1;
+            }
+            if (nameA > nameB) {
+                return sortOrder === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+    }
+
     renderData(filteredData);
 }
 
@@ -198,7 +215,7 @@ function openEditModal(type, id) {
     } else if (type === 'Seleção') {
         createField('País', 'pais', item.pais);
         createField('Torneio', 'torneio', item.torneio);
-        createField('Época', 'epoca', item.epoca);
+        createField('Época', 'epoca', item.epoca, 'number');
         createField('Jogos', 'jogos', item.jogos, 'number');
         createField('Vitórias', 'vitorias', item.vitorias, 'number');
         createField('Empates', 'empates', item.empates, 'number');
@@ -284,8 +301,8 @@ async function deleteItem(type, id) {
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchDataFromSupabase();
-
     document.getElementById('filter-type').addEventListener('change', applyFilters);
     document.getElementById('filter-query').addEventListener('input', applyFilters);
+    document.getElementById('sort-order').addEventListener('change', applyFilters);
     document.getElementById('edit-form').addEventListener('submit', saveChanges);
 });
