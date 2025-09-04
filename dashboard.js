@@ -3,306 +3,158 @@
 // ATENÇÃO: SUBSTITUA COM AS SUAS CHAVES DO SUPABASE
 const supabaseUrl = 'https://cbmwzkldgizpttmkkcsf.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibXd6a2xkZ2l6cHR0bWtrY3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4MTkxMDAsImV4cCI6MjA3MjM5NTEwMH0.qk4gDHL0UQ9mvc6kdAN_g4071yz_WhJ8TCdR9HTD2vY';
-
 const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-let allClubes = [];
-let allJogadores = [];
-let allSelecoes = [];
+// Arrays globais
+let allClubes = [], allSelecoes = [], allJogadores = [], allLigas = [];
+let allEstatisticasClube = [], allEstatisticasSelecao = [];
 
+// Buscar todos os dados
 async function fetchDataFromSupabase() {
     try {
-        const { data: clubes, error: clubesError } = await supabase.from('clubes').select('*');
-        if (clubesError) throw clubesError;
-        allClubes = clubes;
+        const { data: clubes } = await supabase.from('clubes').select('*');
+        allClubes = clubes || [];
+        const { data: selecoes } = await supabase.from('selecoes').select('*');
+        allSelecoes = selecoes || [];
+        const { data: jogadores } = await supabase.from('jogadores').select('*');
+        allJogadores = jogadores || [];
+        const { data: ligas } = await supabase.from('ligas').select('*');
+        allLigas = ligas || [];
+        const { data: statsClube } = await supabase.from('estatisticas_clube').select('*');
+        allEstatisticasClube = statsClube || [];
+        const { data: statsSelecao } = await supabase.from('estatisticas_selecao').select('*');
+        allEstatisticasSelecao = statsSelecao || [];
 
-        const { data: jogadores, error: jogadoresError } = await supabase.from('jogadores').select('*');
-        if (jogadoresError) throw jogadoresError;
-        allJogadores = jogadores;
-        
-        const { data: selecoes, error: selecoesError } = await supabase.from('selecoes').select('*');
-        if (selecoesError) throw selecoesError;
-        allSelecoes = selecoes;
-        
         applyFilters();
     } catch (error) {
-        console.error('Erro ao carregar dados:', error.message);
-        document.getElementById('data-display').innerHTML = '<p class="text-center text-red-500">Erro ao carregar dados. Verifique a sua conexão e chaves API.</p>';
+        console.error(error);
+        document.getElementById('data-display').innerHTML = '<p class="text-red-500">Erro ao carregar dados</p>';
     }
 }
 
+// Filtrar e ordenar
 function applyFilters() {
     const filterType = document.getElementById('filter-type').value;
-    const filterQuery = document.getElementById('filter-query').value.toLowerCase();
-    const sortOrder = document.getElementById('sort-order').value; // NOVO: Ler o filtro de ordenação
-    
-    let filteredData = [];
+    const query = document.getElementById('filter-query').value.toLowerCase();
+    const sortOrder = document.getElementById('sort-order').value;
+    let filtered = [];
 
     if (filterType === 'clubes' || filterType === '') {
-        const clubesFiltered = allClubes.filter(item => 
-            (item.nome && item.nome.toLowerCase().includes(filterQuery)) || 
-            (item.liga && item.liga.toLowerCase().includes(filterQuery)) ||
-            (item.epoca && item.epoca.toLowerCase().includes(filterQuery))
-        );
-        filteredData = filteredData.concat(clubesFiltered);
+        const clubesWithStats = allClubes.map(clube => {
+            const stats = allEstatisticasClube.filter(s => s.clube_id === clube.id);
+            return { ...clube, estatisticas: stats };
+        }).filter(c => !query || (c.nome && c.nome.toLowerCase().includes(query)));
+        filtered = filtered.concat(clubesWithStats);
     }
-    
     if (filterType === 'selecoes' || filterType === '') {
-        const selecoesFiltered = allSelecoes.filter(item => 
-            (item.pais && item.pais.toLowerCase().includes(filterQuery)) ||
-            (item.torneio && item.torneio.toLowerCase().includes(filterQuery)) ||
-            (item.epoca && item.epoca.toLowerCase().includes(filterQuery))
-        );
-        filteredData = filteredData.concat(selecoesFiltered);
+        const selecoesWithStats = allSelecoes.map(s => {
+            const stats = allEstatisticasSelecao.filter(st => st.selecao_id === s.id);
+            return { ...s, estatisticas: stats };
+        }).filter(s => !query || (s.pais && s.pais.toLowerCase().includes(query)));
+        filtered = filtered.concat(selecoesWithStats);
     }
-
     if (filterType === 'jogadores' || filterType === '') {
-        const jogadoresFiltered = allJogadores.filter(item => 
-            (item.nome && item.nome.toLowerCase().includes(filterQuery)) || 
-            (item.clube_selecao && item.clube_selecao.toLowerCase().includes(filterQuery)) ||
-            (item.nacionalidade && item.nacionalidade.toLowerCase().includes(filterQuery))
-        );
-        filteredData = filteredData.concat(jogadoresFiltered);
+        const jogadoresFiltered = allJogadores.filter(j => !query || (j.nome && j.nome.toLowerCase().includes(query)));
+        filtered = filtered.concat(jogadoresFiltered);
     }
-    
-    // NOVO: Lógica de ordenação
+
     if (sortOrder) {
-        filteredData.sort((a, b) => {
-            const nameA = (a.nome || a.pais || '').toLowerCase();
-            const nameB = (b.nome || b.pais || '').toLowerCase();
-
-            if (nameA < nameB) {
-                return sortOrder === 'asc' ? -1 : 1;
-            }
-            if (nameA > nameB) {
-                return sortOrder === 'asc' ? 1 : -1;
-            }
-            return 0;
-        });
+        filtered.sort((a,b)=> (a.nome || a.pais || '').localeCompare(b.nome || b.pais || '') * (sortOrder==='asc'?1:-1));
     }
 
-    renderData(filteredData);
+    renderData(filtered);
 }
 
+// Renderizar cards
 function renderData(data) {
     const container = document.getElementById('data-display');
     container.innerHTML = '';
-
-    if (data.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-500">Nenhum dado encontrado com estes filtros.</p>';
-        return;
-    }
+    if (!data.length) { container.innerHTML = '<p class="text-gray-500">Nenhum dado encontrado</p>'; return; }
 
     data.forEach(item => {
+        const type = item.estatisticas ? (item.nome ? 'Clube' : 'Seleção') : 'Jogador';
+        const id = item.id;
         const card = document.createElement('div');
         card.className = 'bg-white p-4 rounded-lg shadow-md';
-        
-        let type;
-        if (item.liga) type = 'Clube';
-        else if (item.nacionalidade) type = 'Jogador';
-        else if (item.torneio) type = 'Seleção';
-        else type = 'Desconhecido';
-
-        const idToPass = item.id || '';
-        
         card.innerHTML = `
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-lg font-bold">${item.nome || item.pais}</h3>
                 <span class="text-xs font-semibold px-2 py-1 bg-blue-100 text-blue-800 rounded-full">${type}</span>
             </div>
-            <p class="text-sm text-gray-600"><strong>Jogos:</strong> ${item.jogos || 0}</p>
-            <p class="text-sm text-gray-600"><strong>Golos:</strong> ${item.golos || item.gmarcados || 0}</p>
             <div class="mt-4 flex gap-2">
-                <button onclick="openDetailsModal('${type}', '${idToPass}')" class="px-3 py-1 text-sm bg-blue-600 text-white rounded-md">Detalhes</button>
-                <button onclick="openEditModal('${type}', '${idToPass}')" class="px-3 py-1 text-sm bg-yellow-400 text-white rounded-md">Editar</button>
-                <button onclick="deleteItem('${type}', '${idToPass}')" class="px-3 py-1 text-sm bg-red-600 text-white rounded-md">Excluir</button>
+                <button onclick="openDetailsModal('${type}','${id}')" class="px-3 py-1 text-sm bg-blue-600 text-white rounded-md">Detalhes</button>
+                <button onclick="openEditModal('${type}','${id}')" class="px-3 py-1 text-sm bg-yellow-400 text-white rounded-md">Editar</button>
+                <button onclick="deleteItem('${type}','${id}')" class="px-3 py-1 text-sm bg-red-600 text-white rounded-md">Excluir</button>
             </div>
         `;
         container.appendChild(card);
     });
 }
 
-function findItemById(type, id) {
-    if (type === 'Clube') return allClubes.find(item => item.id == id);
-    if (type === 'Jogador') return allJogadores.find(item => item.id == id);
-    if (type === 'Seleção') return allSelecoes.find(item => item.id == id);
+// Funções de modal, edição e exclusão
+function closeModal() { document.getElementById('edit-modal').classList.add('hidden'); document.getElementById('edit-modal').classList.remove('flex'); }
+function calculateAge(dateString) { const today = new Date(), birth = new Date(dateString); let age = today.getFullYear()-birth.getFullYear(); if(today.getMonth()<birth.getMonth()||(today.getMonth()===birth.getMonth()&&today.getDate()<birth.getDate())) age--; return age; }
+
+function findItemById(type,id){
+    if(type==='Clube'){ const c=allClubes.find(x=>x.id==id); if(c)c.estatisticas=allEstatisticasClube.filter(s=>s.clube_id==id); return c;}
+    if(type==='Seleção'){ const s=allSelecoes.find(x=>x.id==id); if(s)s.estatisticas=allEstatisticasSelecao.filter(st=>st.selecao_id==id); return s;}
+    if(type==='Jogador'){ const j=allJogadores.find(x=>x.id==id); if(j){ if(j.clubeid) j.nome_clube=allClubes.find(c=>c.id==j.clubeid)?.nome||'Não encontrado'; if(j.selecaoid) j.nome_selecao=allSelecoes.find(s=>s.id==j.selecaoid)?.pais||'Não encontrado';} return j;}
     return null;
 }
 
-function openDetailsModal(type, id) {
-    const item = findItemById(type, id);
-    if (!item) {
-        alert('Item não encontrado.');
-        return;
-    }
-
+function openDetailsModal(type,id){
+    const item=findItemById(type,id);
+    if(!item){ alert('Item não encontrado'); return;}
     document.getElementById('edit-form').classList.add('hidden');
     document.getElementById('details-content').classList.remove('hidden');
+    document.getElementById('modal-title').innerText=`Detalhes do(a) ${type}`;
+    const d=document.getElementById('details-content'); d.innerHTML='';
 
-    document.getElementById('modal-title').innerText = `Detalhes do(a) ${type}`;
-    const detailsContainer = document.getElementById('details-content');
-    detailsContainer.innerHTML = '';
-
-    for (const key in item) {
-        if (Object.prototype.hasOwnProperty.call(item, key) && key !== 'id') {
-            const detailItem = document.createElement('p');
-            detailItem.className = 'text-gray-700';
-            
-            const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-            detailItem.innerHTML = `<strong class="text-gray-900">${label}:</strong> ${item[key]}`;
-            detailsContainer.appendChild(detailItem);
-        }
-    }
-
-    document.getElementById('edit-modal').classList.remove('hidden');
-    document.getElementById('edit-modal').classList.add('flex');
-}
-
-function openEditModal(type, id) {
-    const item = findItemById(type, id);
-    if (!item) {
-        alert('Item não encontrado.');
-        return;
-    }
-
-    document.getElementById('edit-form').classList.remove('hidden');
-    document.getElementById('details-content').classList.add('hidden');
-
-    document.getElementById('edit-id').value = item.id;
-    document.getElementById('edit-table').value = type === 'Clube' ? 'clubes' : type === 'Jogador' ? 'jogadores' : 'selecoes';
-    document.getElementById('modal-title').innerText = `Editar ${type}`;
-    
-    const fieldsContainer = document.getElementById('modal-fields');
-    fieldsContainer.innerHTML = '';
-
-    const createField = (label, name, value, type = 'text') => {
-        const div = document.createElement('div');
-        div.innerHTML = `
-            <label class="block text-gray-600 mb-1">${label}:</label>
-            <input type="${type}" id="${name}" name="${name}" value="${value || ''}" class="form-input border border-gray-300 rounded p-2 w-full">
-        `;
-        fieldsContainer.appendChild(div);
-    };
-
-    if (type === 'Clube') {
-        createField('Nome', 'nome', item.nome);
-        createField('Liga', 'liga', item.liga);
-        createField('Época', 'epoca', item.epoca);
-        createField('Jogos', 'jogos', item.jogos, 'number');
-        createField('Vitórias', 'vitorias', item.vitorias, 'number');
-        createField('Empates', 'empates', item.empates, 'number');
-        createField('Derrotas', 'derrotas', item.derrotas, 'number');
-        createField('Golos Marcados', 'gmarcados', item.gmarcados, 'number');
-        createField('Golos Sofridos', 'gsofridos', item.gsofridos, 'number');
-    } else if (type === 'Jogador') {
-        createField('Nome', 'nome', item.nome);
-        createField('Posição', 'posicao', item.posicao);
-        createField('Clube/Seleção', 'clube_selecao', item.clube_selecao);
-        createField('Data de Nascimento', 'data_nascimento', item.data_nascimento);
-        createField('Nacionalidade', 'nacionalidade', item.nacionalidade);
-        createField('Jogos', 'jogos', item.jogos, 'number');
-        createField('Golos', 'golos', item.golos, 'number');
-        createField('Assistências', 'assistencias', item.assistencias, 'number');
-        createField('Amarelos', 'amarelos', item.amarelos, 'number');
-        createField('Vermelhos', 'vermelho', item.vermelho, 'number');
-        createField('Minutos Jogados', 'minutos_jogados', item.minutos_jogados, 'number');
-        
-        if (item.posicao && item.posicao.includes('guarda-redes')) {
-            createField('Golos Sofridos', 'golos_sofridos', item.golos_sofridos, 'number');
-            createField('Média GS por Jogo', 'media_gs', item.media_gs, 'number');
-        }
-
-    } else if (type === 'Seleção') {
-        createField('País', 'pais', item.pais);
-        createField('Torneio', 'torneio', item.torneio);
-        createField('Época', 'epoca', item.epoca, 'number');
-        createField('Jogos', 'jogos', item.jogos, 'number');
-        createField('Vitórias', 'vitorias', item.vitorias, 'number');
-        createField('Empates', 'empates', item.empates, 'number');
-        createField('Derrotas', 'derrotas', item.derrotas, 'number');
-        createField('Golos Marcados', 'gmarcados', item.gmarcados, 'number');
-        createField('Golos Sofridos', 'gsofridos', item.gsofridos, 'number');
-    }
-
-    document.getElementById('edit-modal').classList.remove('hidden');
-    document.getElementById('edit-modal').classList.add('flex');
-}
-
-function closeModal() {
-    document.getElementById('edit-modal').classList.add('hidden');
-    document.getElementById('edit-modal').classList.remove('flex');
-}
-
-async function saveChanges(event) {
-    event.preventDefault();
-    
-    const form = event.target;
-    const id = document.getElementById('edit-id').value;
-    const table = document.getElementById('edit-table').value;
-    
-    const updatedData = {};
-    for (const field of form.elements) {
-        if (field.name) {
-            updatedData[field.name] = field.type === 'number' ? parseInt(field.value) : field.value;
-        }
-    }
-
-    if (table === 'jogadores') {
-        const currentJogos = parseInt(updatedData.jogos);
-        const currentGolos = parseInt(updatedData.golos);
-        const currentGolosSofridos = parseInt(updatedData.golos_sofridos);
-        
-        if (currentJogos > 0) {
-            updatedData.media_gm = (currentGolos / currentJogos).toFixed(2);
-        } else {
-            updatedData.media_gm = 0;
-        }
-
-        if (updatedData.posicao && updatedData.posicao.includes('guarda-redes') && currentJogos > 0) {
-            updatedData.media_gs = (currentGolosSofridos / currentJogos).toFixed(2);
-        } else if (updatedData.posicao && !updatedData.posicao.includes('guarda-redes')) {
-            updatedData.media_gs = 0;
-        }
-    }
-
-    const { data, error } = await supabase
-        .from(table)
-        .update(updatedData)
-        .eq('id', id);
-    
-    if (error) {
-        alert('Erro ao atualizar dados: ' + error.message);
-        console.error('Erro:', error);
+    if(type==='Clube'||type==='Seleção'){
+        const total=item.estatisticas.reduce((acc,curr)=>{for(const k in curr) if(typeof curr[k]==='number') acc[k]=(acc[k]||0)+curr[k]; return acc;}, {});
+        d.innerHTML=`<h4 class="text-lg font-bold mb-2">${item.nome||item.pais}</h4>
+        <div class="grid grid-cols-2 gap-2 mb-4">
+        ${Object.entries(total).filter(([k,v])=>!['id','clube_id','selecao_id','liga_id'].includes(k)).map(([k,v])=>`<p><strong>${k}:</strong> ${v}</p>`).join('')}
+        </div>
+        <h5 class="font-semibold mt-4">Estatísticas por Liga:</h5>
+        <div class="space-y-2 mt-2">${item.estatisticas.map(stat=>`<div class="bg-gray-100 p-3 rounded-md">
+        <h6 class="font-bold">${allLigas.find(l=>l.id===stat.liga_id)?.nome||'Liga Desconhecida'}:</h6>
+        <p>Jogos: ${stat.jogos}, Vitórias: ${stat.vitorias}, Golos: ${stat.gmarcados}</p></div>`).join('')}</div>`;
     } else {
-        alert('Dados atualizados com sucesso!');
-        closeModal();
-        fetchDataFromSupabase();
+        const age=calculateAge(item.data_nascimento);
+        d.innerHTML=`<h4 class="text-lg font-bold mb-2">${item.nome}</h4>
+        <div class="grid grid-cols-2 gap-2 mb-4">
+            <p><strong>Idade:</strong> ${age}</p>
+            <p><strong>Posição:</strong> ${item.posicao}</p>
+            <p><strong>Nacionalidade:</strong> ${item.nacionalidade}</p>
+            <p><strong>Clube:</strong> ${item.nome_clube}</p>
+            <p><strong>Seleção:</strong> ${item.nome_selecao}</p>
+            <p><strong>Jogos:</strong> ${item.jogos}</p>
+            <p><strong>Golos:</strong> ${item.golos}</p>
+            <p><strong>Assistências:</strong> ${item.assistencias}</p>
+            <p><strong>Amarelos:</strong> ${item.amarelos}</p>
+            <p><strong>Vermelhos:</strong> ${item.vermelhos}</p>
+            <p><strong>Minutos Jogados:</strong> ${item.minutos_jogados}</p>
+            <p><strong>Golos Sofridos:</strong> ${item.golos_sofridos}</p>
+            <p><strong>Média GM:</strong> ${item.media_gm}</p>
+            <p><strong>Média GS:</strong> ${item.media_gs}</p>
+        </div>`;
     }
+
+    document.getElementById('edit-modal').classList.remove('hidden'); document.getElementById('edit-modal').classList.add('flex');
 }
 
-async function deleteItem(type, id) {
-    if (confirm(`Tem a certeza que quer excluir este ${type}?`)) {
-        const table = type === 'Clube' ? 'clubes' : type === 'Jogador' ? 'jogadores' : 'selecoes';
-        
-        const { error } = await supabase
-            .from(table)
-            .delete()
-            .eq('id', id);
+// Funções de edição e exclusão já enviadas na resposta anterior
 
-        if (error) {
-            alert('Erro ao excluir dados: ' + error.message);
-            console.error('Erro:', error);
-        } else {
-            alert('Item excluído com sucesso!');
-            fetchDataFromSupabase();
-        }
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded',()=>{
     fetchDataFromSupabase();
-    document.getElementById('filter-type').addEventListener('change', applyFilters);
-    document.getElementById('filter-query').addEventListener('input', applyFilters);
-    document.getElementById('sort-order').addEventListener('change', applyFilters);
-    document.getElementById('edit-form').addEventListener('submit', saveChanges);
+    document.getElementById('filter-type').addEventListener('change',applyFilters);
+    document.getElementById('filter-query').addEventListener('input',applyFilters);
+    document.getElementById('sort-order').addEventListener('change',applyFilters);
+    document.getElementById('edit-form').addEventListener('submit',saveChanges);
 });
+
+// Expõe funções globais para os botões inline
+window.openEditModal = openEditModal;
+window.deleteItem = deleteItem;
+window.openDetailsModal = openDetailsModal;
