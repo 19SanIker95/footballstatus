@@ -15,7 +15,6 @@ let equipas = [];
 
 // Função para carregar as ligas da base de dados e preencher o select
 async function carregarLigas() {
-    console.log('A carregar ligas...');
     const { data, error } = await supabase
         .from('ligas')
         .select('id, nome')
@@ -27,14 +26,11 @@ async function carregarLigas() {
     }
     
     ligas = data;
-    console.log('Ligas carregadas:', ligas);
     renderizarFormulario();
 }
 
 // Carregar clubes e seleções para o dropdown de jogos
 async function carregarEquipas() {
-    console.log('A carregar equipas (clubes e seleções)...');
-    
     const { data: clubes, error: clubesError } = await supabase
         .from('clubes')
         .select('nome, id');
@@ -48,13 +44,8 @@ async function carregarEquipas() {
         return;
     }
     
-    console.log('Clubes carregados:', clubes);
-    console.log('Seleções carregadas:', selecoes);
-
     const selecoesMapeadas = selecoes.map(s => ({ nome: s.pais, id: s.id }));
     equipas = [...clubes, ...selecoesMapeadas].sort((a, b) => a.nome.localeCompare(b.nome));
-
-    console.log('Lista final de equipas combinada:', equipas);
 }
 
 // Event listener para o formulário de criação de ligas
@@ -169,92 +160,122 @@ function renderizarFormulario() {
         `;
 
     } else if (tipo === 'jogo') {
-        html += `
-            <div class="mb-3">
-                <label for="data" class="form-label">Data do Jogo</label>
-                <input type="date" class="form-control" id="data" required>
-            </div>
-            <div class="mb-3">
-                <label for="liga" class="form-label">Liga</label>
-                <select class="form-select" id="liga" required>
-                    <option value="" disabled selected>Selecione uma liga...</option>
-                    ${ligas.map(liga => `<option value="${liga.id}">${liga.nome}</option>`).join('')}
-                </select>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="equipa_casa" class="form-label">Equipa Analisada</label>
-                    <select class="form-select" id="equipa_analisada" required>
-                        <option value="" disabled selected>Selecione uma equipa...</option>
-                        ${equipas.map(equipa => `<option value="${equipa.nome}">${equipa.nome}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="equipa_fora" class="form-label">Equipa Adversária</label>
-                    <input type="text" class="form-control" id="equipa_fora" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="resultado_casa" class="form-label">Resultado Analisado</label>
-                    <input type="number" class="form-control" id="resultado_casa" value="0" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="resultado_fora" class="form-label">Resultado Adversário</label>
-                    <input type="number" class="form-control" id="resultado_fora" value="0" required>
-                </div>
-            </div>
-            <hr>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="cantos_casa" class="form-label">Cantos a Favor</label>
-                    <input type="number" class="form-control" id="cantos_casa" value="0" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="cantos_fora" class="form-label">Cantos Adversário</label>
-                    <input type="number" class="form-control" id="cantos_fora" value="0" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="posse_bola_casa" class="form-label">Posse de Bola Analisada (%)</label>
-                    <input type="number" class="form-control" id="posse_bola_casa" value="0" step="0.01" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="posse_bola_fora" class="form-label">Posse de Bola Adversário (%)</label>
-                    <input type="number" class="form-control" id="posse_bola_fora" value="0" step="0.01" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="cartoes_amarelos_casa" class="form-label">Cartões Amarelos Analisado</label>
-                    <input type="number" class="form-control" id="cartoes_amarelos_casa" value="0" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="cartoes_vermelhos_casa" class="form-label">Cartões Vermelhos Analisado</label>
-                    <input type="number" class="form-control" id="cartoes_vermelhos_casa" value="0" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="cartoes_amarelos_fora" class="form-label">Cartões Amarelos Adversário</label>
-                    <input type="number" class="form-control" id="cartoes_amarelos_fora" value="0" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="cartoes_vermelhos_fora" class="form-label">Cartões Vermelhos Adversário</label>
-                    <input type="number" class="form-control" id="cartoes_vermelhos_fora" value="0" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="total_passes_casa" class="form-label">Total de Passes Analisado</label>
-                    <input type="number" class="form-control" id="total_passes_casa" value="0" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="total_passes_fora" class="form-label">Total de Passes Adversário</label>
-                    <input type="number" class="form-control" id="total_passes_fora" value="0" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="remates_enquadrados_a_baliza_casa" class="form-label">Remates à Baliza Analisado</label>
-                    <input type="number" class="form-control" id="remates_enquadrados_a_baliza_casa" value="0" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="remates_enquadrados_a_baliza_fora" class="form-label">Remates à Baliza Adversário</label>
-                    <input type="number" class="form-control" id="remates_enquadrados_a_baliza_fora" value="0" required>
+    html += `
+        <div class="mb-3">
+            <label for="data" class="form-label">Data do Jogo</label>
+            <input type="date" class="form-control" id="data" required>
+        </div>
+        <div class="mb-3">
+            <label for="liga" class="form-label">Liga</label>
+            <select class="form-select" id="liga" required>
+                <option value="" disabled selected>Selecione uma liga...</option>
+                ${ligas.map(liga => `<option value="${liga.id}">${liga.nome}</option>`).join('')}
+            </select>
+        </div>
+
+        <hr>
+
+        <div class="row">
+            <!-- Equipa Analisada -->
+            <div class="col-6">
+                <div class="card p-3 h-100">
+                    <h5 class="text-center">Equipa Analisada</h5>
+
+                    <div class="mb-3">
+                        <label for="equipa_analisada" class="form-label">Nome</label>
+                        <select class="form-select" id="equipa_analisada" required>
+                            <option value="" disabled selected>Selecione uma equipa...</option>
+                            ${equipas.map(equipa => `<option value="${equipa.nome}">${equipa.nome}</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="resultado_casa" class="form-label">Resultado</label>
+                        <input type="number" class="form-control" id="resultado_casa" value="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cantos_casa" class="form-label">Cantos</label>
+                        <input type="number" class="form-control" id="cantos_casa" value="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="posse_bola_casa" class="form-label">Posse de Bola (%)</label>
+                        <input type="number" class="form-control" id="posse_bola_casa" value="0" step="0.01" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cartoes_amarelos_casa" class="form-label">Cartões Amarelos</label>
+                        <input type="number" class="form-control" id="cartoes_amarelos_casa" value="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cartoes_vermelhos_casa" class="form-label">Cartões Vermelhos</label>
+                        <input type="number" class="form-control" id="cartoes_vermelhos_casa" value="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="total_passes_casa" class="form-label">Total de Passes</label>
+                        <input type="number" class="form-control" id="total_passes_casa" value="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="remates_enquadrados_a_baliza_casa" class="form-label">Remates à Baliza</label>
+                        <input type="number" class="form-control" id="remates_enquadrados_a_baliza_casa" value="0" required>
+                    </div>
                 </div>
             </div>
-        `;
-    }
+
+            <!-- Equipa Adversária -->
+            <div class="col-6">
+                <div class="card p-3 h-100">
+                    <h5 class="text-center">Equipa Adversária</h5>
+
+                    <div class="mb-3">
+                        <label for="equipa_fora" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="equipa_fora" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="resultado_fora" class="form-label">Resultado</label>
+                        <input type="number" class="form-control" id="resultado_fora" value="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cantos_fora" class="form-label">Cantos</label>
+                        <input type="number" class="form-control" id="cantos_fora" value="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="posse_bola_fora" class="form-label">Posse de Bola (%)</label>
+                        <input type="number" class="form-control" id="posse_bola_fora" value="0" step="0.01" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cartoes_amarelos_fora" class="form-label">Cartões Amarelos</label>
+                        <input type="number" class="form-control" id="cartoes_amarelos_fora" value="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cartoes_vermelhos_fora" class="form-label">Cartões Vermelhos</label>
+                        <input type="number" class="form-control" id="cartoes_vermelhos_fora" value="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="total_passes_fora" class="form-label">Total de Passes</label>
+                        <input type="number" class="form-control" id="total_passes_fora" value="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="remates_enquadrados_a_baliza_fora" class="form-label">Remates à Baliza</label>
+                        <input type="number" class="form-control" id="remates_enquadrados_a_baliza_fora" value="0" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
     
     dynamicFormFields.innerHTML = html;
 }
