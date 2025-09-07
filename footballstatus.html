@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionar Dados - Football Status</title>
+    <link href="./bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container {
+            max-width: 800px;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-light bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">Football Status</a>
+        <a href="footballdashboard.html" class="btn btn-outline-primary me-2">Ir para Dashboard</a>
+        <a href="index.html" class="btn btn-outline-secondary">Voltar ao Index</a>
+      </div>
+    </nav>
+    
+    <div class="container">
+        <h1 class="text-center my-4">Adicionar Dados</h1>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Criar Nova Liga
+            </div>
+            <div class="card-body">
+                <form id="createLeagueForm">
+                    <div class="mb-3">
+                        <label for="leagueName" class="form-label">Nome da Liga</label>
+                        <input type="text" class="form-control" id="leagueName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="leagueCountry" class="form-label">País</label>
+                        <input type="text" class="form-control" id="leagueCountry" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Criar Liga</button>
+                </form>
+            </div>
+        </div>
+        
+        <form id="dataForm">
+            <div class="mb-3">
+                <label for="entityType" class="form-label">Tipo de Entidade</label>
+                <select class="form-select" id="entityType" required>
+                    <option value="" disabled selected>Selecione um tipo...</option>
+                    <option value="clube">Clube</option>
+                    <option value="selecao">Seleção</option>
+                    <option value="jogo">Jogo</option>
+                </select>
+            </div>
+            
+            <div id="dynamicFormFields"></div>
+
+            <button type="submit" class="btn btn-primary w-100">Adicionar Dados</button>
+        </form>
+    </div>
+
+    <script src="./bootstrap.bundle.min.js"></script>
+    <script type="module" src="footballstatus.js"></script>
+</body>
+</html>

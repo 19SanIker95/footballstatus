@@ -1,0 +1,157 @@
+Relações entre Tabelas:
+
+🔑 Relações
+
+Liga → pode estar ligada a clubes, seleções e jogos.
+
+Clube / Seleção → têm as suas estatísticas por época.
+
+Jogadores → pertencem a clube e/ou seleção.
+
+Jogos → podem ser de clube ou seleção (um dos dois preenchido).
+
+
+
+📌 Script SQL Completo
+-- Limpar tabelas antigas (se existirem)
+DROP TABLE IF EXISTS jogos CASCADE;
+DROP TABLE IF EXISTS estatisticas_clube CASCADE;
+DROP TABLE IF EXISTS estatisticas_selecao CASCADE;
+DROP TABLE IF EXISTS jogadores CASCADE;
+DROP TABLE IF EXISTS clubes CASCADE;
+DROP TABLE IF EXISTS selecoes CASCADE;
+DROP TABLE IF EXISTS ligas CASCADE;
+
+-- ============================
+-- 1. Tabela de Ligas
+-- ============================
+CREATE TABLE ligas (
+    id BIGSERIAL PRIMARY KEY,
+    nome TEXT NOT NULL,
+    pais TEXT NOT NULL
+);
+
+-- ============================
+-- 2. Tabelas de Clubes e Seleções
+-- ============================
+CREATE TABLE clubes (
+    id BIGSERIAL PRIMARY KEY,
+    nome TEXT NOT NULL
+);
+
+CREATE TABLE selecoes (
+    id BIGSERIAL PRIMARY KEY,
+    pais TEXT NOT NULL
+);
+
+-- ============================
+-- 3. Jogadores
+-- ============================
+CREATE TABLE jogadores (
+    id BIGSERIAL PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    nome TEXT NOT NULL,
+    posicao TEXT,
+    clubeid BIGINT REFERENCES clubes(id) ON DELETE SET NULL,
+    selecaoid BIGINT REFERENCES selecoes(id) ON DELETE SET NULL,
+    data_nascimento DATE,
+    nacionalidade TEXT,
+    jogos INT DEFAULT 0,
+    golos INT DEFAULT 0,
+    assistencias INT DEFAULT 0,
+    amarelos INT DEFAULT 0,
+    vermelhos INT DEFAULT 0,
+    media_gm DOUBLE PRECISION DEFAULT 0,
+    media_gs DOUBLE PRECISION DEFAULT 0,
+    minutos_jogados BIGINT DEFAULT 0,
+    golos_sofridos BIGINT DEFAULT 0
+);
+
+-- ============================
+-- 4. Estatísticas de Clube
+-- ============================
+CREATE TABLE estatisticas_clube (
+    id BIGSERIAL PRIMARY KEY,
+    clube_id BIGINT REFERENCES clubes(id) ON DELETE CASCADE,
+    liga_id BIGINT REFERENCES ligas(id) ON DELETE CASCADE,
+    epoca TEXT NOT NULL,
+    jogos BIGINT DEFAULT 0,
+    vitorias BIGINT DEFAULT 0,
+    empates BIGINT DEFAULT 0,
+    derrotas BIGINT DEFAULT 0,
+    gmarcados BIGINT DEFAULT 0,
+    gsofridos BIGINT DEFAULT 0,
+    dif_golos BIGINT DEFAULT 0,
+    media_gm DOUBLE PRECISION DEFAULT 0,
+    media_gs DOUBLE PRECISION DEFAULT 0,
+    cantos_fav BIGINT DEFAULT 0,
+    cantos_cont BIGINT DEFAULT 0
+);
+
+-- ============================
+-- 5. Estatísticas de Seleção
+-- ============================
+CREATE TABLE estatisticas_selecao (
+    id BIGSERIAL PRIMARY KEY,
+    selecao_id BIGINT REFERENCES selecoes(id) ON DELETE CASCADE,
+    liga_id BIGINT REFERENCES ligas(id) ON DELETE CASCADE,
+    epoca TEXT NOT NULL,
+    jogos BIGINT DEFAULT 0,
+    vitorias BIGINT DEFAULT 0,
+    empates BIGINT DEFAULT 0,
+    derrotas BIGINT DEFAULT 0,
+    gmarcados BIGINT DEFAULT 0,
+    gsofridos BIGINT DEFAULT 0,
+    dif_golos BIGINT DEFAULT 0,
+    media_gm DOUBLE PRECISION DEFAULT 0,
+    media_gs DOUBLE PRECISION DEFAULT 0,
+    cantos_fav BIGINT DEFAULT 0,
+    cantos_cont BIGINT DEFAULT 0
+);
+
+-- ============================
+-- 6. Jogos
+-- ============================
+CREATE TABLE jogos (
+    id BIGSERIAL PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    data_jogo DATE NOT NULL,
+    liga_id BIGINT REFERENCES ligas(id) ON DELETE SET NULL,
+    clube_id BIGINT REFERENCES clubes(id) ON DELETE SET NULL,
+    selecao_id BIGINT REFERENCES selecoes(id) ON DELETE SET NULL,
+    equipa_adversaria TEXT NOT NULL,
+    golo_equipa_analisada BIGINT DEFAULT 0,
+    golo_adversario BIGINT DEFAULT 0,
+    resultado TEXT,
+    cantos_fav BIGINT DEFAULT 0,
+    cantos_cont BIGINT DEFAULT 0,
+    marcadores JSONB DEFAULT '[]',
+    cartoes JSONB DEFAULT '[]',
+    local TEXT
+);
+
+-- ============================
+-- Índices úteis
+-- ============================
+CREATE INDEX idx_jogadores_clube ON jogadores(clubeid);
+CREATE INDEX idx_jogadores_selecao ON jogadores(selecaoid);
+CREATE INDEX idx_estatisticas_clube ON estatisticas_clube(clube_id, liga_id, epoca);
+CREATE INDEX idx_estatisticas_selecao ON estatisticas_selecao(selecao_id, liga_id, epoca);
+
+
+✅ Com este script vais ter:
+
+Ligas, Clubes, Seleções, Jogadores
+
+Estatísticas (clubes/seleções por época e liga)
+
+Jogos com marcadores e cartões guardados em JSONB
+
+⚡ Depois de executar isto no Supabase, conseguimos já começar a:
+
+Inserir ligas, clubes, seleções e jogadores
+
+Inserir jogos e armazenar estatísticas básicas
+
+Próximo passo: implementar a lógica de atualização automática das estatísticas.
+
