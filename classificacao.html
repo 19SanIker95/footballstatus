@@ -18,12 +18,14 @@
 </head>
 
 <body class="bg-gray-100 min-h-screen">
+
     <!-- Script de verificação de autenticação -->
     <script type="module">
         if (!localStorage.getItem('auth_token')) {
             window.location.href = 'login.html';
         }
     </script>
+
     
     <!-- Barra de Navegação -->
     <nav class="bg-white shadow-sm">

@@ -50,8 +50,7 @@ async function fetchAndRenderStandings(leagueId) {
         if (jogosError) throw jogosError;
         allJogos = jogos;
 
-        // Note: Removing parseInt() here to ensure the ID is handled correctly as a string
-        const filteredJogos = allJogos.filter(jogo => jogo.liga_id === leagueId);
+        const filteredJogos = allJogos.filter(jogo => String(jogo.liga_id) === String(leagueId));
         
         if (filteredJogos.length === 0) {
             loading.classList.add('hidden');
@@ -60,14 +59,12 @@ async function fetchAndRenderStandings(leagueId) {
             return;
         }
 
-        // Obter as equipas que participaram na liga selecionada
         const teamsInLeague = new Set();
         filteredJogos.forEach(jogo => {
             teamsInLeague.add(jogo.equipa_casa_id);
             teamsInLeague.add(jogo.equipa_fora_id);
         });
 
-        // Calcular a classificação
         const teamStats = {};
         allEquipas.forEach(equipa => {
             if (teamsInLeague.has(equipa.id)) {
@@ -115,7 +112,6 @@ async function fetchAndRenderStandings(leagueId) {
             }
         });
 
-        // Converter o objeto em array e ordenar
         const standings = Object.values(teamStats).sort((a, b) => {
             if (b.points !== a.points) {
                 return b.points - a.points;
@@ -128,16 +124,23 @@ async function fetchAndRenderStandings(leagueId) {
             return b.goalsFor - a.goalsFor;
         });
 
-        // Renderizar a tabela
+// Renderizar a tabela
         standings.forEach((team, index) => {
             const row = document.createElement('tr');
             let rowClass = 'bg-white border-b hover:bg-gray-50 transition-colors duration-200';
             const goalDifference = team.goalsFor - team.goalsAgainst;
 
+            // --- INÍCIO DA SECÇÃO DE DIAGNÓSTICO ---
+            // Esta linha irá mostrar-nos os valores que estão a ser usados na condição
+            console.log(`Equipa: ${team.team}, Index: ${index}, standings.length: ${standings.length}, Deve ser vermelho? ${index >= standings.length - 3}`);
+            // --- FIM DA SECÇÃO DE DIAGNÓSTICO ---
+            
+            // Condição para as 3 primeiras posições (lugares de topo)
             if (index < 3) {
                 rowClass += ' bg-blue-100 font-semibold';
+            // Condição para as 3 últimas posições (zona de despromoção)
             } else if (index >= standings.length - 3) {
-                rowClass += ' bg-red-100 font-semibold';
+                rowClass += ' bg-orange-100 font-semibold';
             }
 
             row.className = rowClass;
