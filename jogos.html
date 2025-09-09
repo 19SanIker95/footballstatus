@@ -38,7 +38,7 @@
     <main class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-800">Gestão de Jogos</h1>
-            <button id="add-match-btn" class="bg-green-600 text-white font-medium py-2 px-4 rounded-md shadow-md hover:bg-green-700 transition-colors">Adicionar Jogo</button>
+            <button id="add-match-btn" class="bg-green-600 text-white font-medium py-2 px-4 rounded-md shadow-md hover:bg-green-700 transition-colors hidden">Adicionar Jogo</button>
         </div>
         
         <!-- Formulário para adicionar/editar jogo -->
@@ -106,7 +106,7 @@
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Equipa da Casa</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Equipa de Fora</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resultado</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                        <th id="admin-actions-header" scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="matches-table-body" class="bg-white divide-y divide-gray-200">
@@ -131,5 +131,14 @@
     <script type="module" src="supabaseClient.js"></script>
     <script type="module" src="jogos.js"></script>
     <script type="module" src="logout.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const userType = localStorage.getItem('user_type');
+            if (userType === 'admin') {
+                document.getElementById('add-match-btn').classList.remove('hidden');
+                document.getElementById('admin-actions-header').classList.remove('hidden');
+            }
+        });
+    </script>
 </body>
 </html>

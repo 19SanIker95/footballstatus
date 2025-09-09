@@ -10,7 +10,6 @@ loginForm.addEventListener('submit', async (e) => {
     const email = emailInput.value;
     const password = passwordInput.value;
     
-    // Verificação simples contra a sua tabela 'utilizadores'
     const { data, error } = await supabase
         .from('utilizadores')
         .select('*')
@@ -23,9 +22,8 @@ loginForm.addEventListener('submit', async (e) => {
         errorMessageEl.classList.remove('hidden');
     } else {
         errorMessageEl.classList.add('hidden');
-        // Armazena um token simples no localStorage para indicar que o utilizador está autenticado
         localStorage.setItem('auth_token', data.id);
-        // Redireciona para o dashboard após o login
+        localStorage.setItem('user_type', data.tipo); // Armazena o tipo de utilizador
         window.location.href = 'index.html';
     }
 });

@@ -58,20 +58,29 @@ async function fetchData() {
     return { leagues: leaguesData, teams: teamsData };
 }
 
-function getTeamsInLeague(leagueId) {
-    return allTeams.filter(team => team.liga_id === leagueId);
-}
-
 function renderLeagues(leaguesToRender) {
+    const userType = localStorage.getItem('user_type');
     leaguesListContainer.innerHTML = '';
     if (leaguesToRender.length === 0) {
         leaguesListContainer.innerHTML = `<p class="text-center text-gray-500 col-span-full">Nenhuma liga encontrada. Adicione uma nova liga para começar.</p>`;
         return;
     }
     leaguesToRender.forEach(league => {
-        const teamsInLeague = getTeamsInLeague(league.id).length;
         const card = document.createElement('div');
         card.className = 'bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow';
+        let actionButtonsHtml = '';
+        
+        if (userType === 'admin') {
+             actionButtonsHtml = `
+                <button data-id="${league.id}" class="edit-btn p-2 rounded-full hover:bg-gray-200">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                </button>
+                <button data-id="${league.id}" class="delete-btn p-2 rounded-full hover:bg-gray-200">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-1 12H6L5 7m4 0V5a2 2 0 012-2h2a2 2 0 012 2v2m-6 0h6"></path></svg>
+                </button>
+            `;
+        }
+
         card.innerHTML = `
             <div class="flex justify-between items-start">
                 <div>
@@ -80,17 +89,11 @@ function renderLeagues(leaguesToRender) {
                     <p class="text-sm text-gray-500">${league.pais}</p>
                 </div>
                 <div class="flex space-x-2">
-                    <button data-id="${league.id}" class="edit-btn p-2 rounded-full hover:bg-gray-200">
-                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                    </button>
-                    <button data-id="${league.id}" class="delete-btn p-2 rounded-full hover:bg-gray-200">
-                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-1 12H6L5 7m4 0V5a2 2 0 012-2h2a2 2 0 012 2v2m-6 0h6"></path></svg>
-                    </button>
+                    ${actionButtonsHtml}
                 </div>
             </div>
             <div class="mt-4 text-sm text-gray-700">
                 <p><strong>Duração:</strong> ${league.data_inicio || 'N/A'} - ${league.data_fim || 'N/A'}</p>
-                <p><strong>Equipas:</strong> ${teamsInLeague} equipas</p>
             </div>
         `;
         leaguesListContainer.appendChild(card);
@@ -99,6 +102,9 @@ function renderLeagues(leaguesToRender) {
 
 // Event Listeners
 addLeagueBtn.addEventListener('click', () => {
+    const userType = localStorage.getItem('user_type');
+    if (userType !== 'admin') return;
+
     formTitle.textContent = 'Adicionar Nova Liga';
     leagueForm.reset();
     leagueIdInput.value = '';
@@ -109,6 +115,9 @@ cancelFormBtn.addEventListener('click', hideForm);
 
 leagueForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const userType = localStorage.getItem('user_type');
+    if (userType !== 'admin') return;
+    
     const id = leagueIdInput.value;
     const leagueData = {
         nome: leagueNameInput.value,
@@ -133,6 +142,11 @@ leagueForm.addEventListener('submit', async (e) => {
 });
 
 leaguesListContainer.addEventListener('click', async (e) => {
+    const userType = localStorage.getItem('user_type');
+    if (userType !== 'admin') {
+        return; // Impedir ações para não-administradores
+    }
+
     const target = e.target.closest('button');
     if (!target) return;
     

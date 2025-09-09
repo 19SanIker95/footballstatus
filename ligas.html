@@ -13,6 +13,7 @@
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
+    <!-- Script de verificação de autenticação -->
     <script type="module">
         if (!localStorage.getItem('auth_token')) {
             window.location.href = 'login.html';
@@ -33,15 +34,19 @@
             </div>
         </div>
     </nav>
+
     <main class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-800">Gestão de Ligas</h1>
-            <button id="add-league-btn" class="bg-green-600 text-white font-medium py-2 px-4 rounded-md shadow-md hover:bg-green-700 transition-colors">Adicionar Liga</button>
+            <button id="add-league-btn" class="bg-green-600 text-white font-medium py-2 px-4 rounded-md shadow-md hover:bg-green-700 transition-colors hidden">Adicionar Liga</button>
         </div>
+        
+        <!-- Formulário para adicionar/editar liga -->
         <div id="form-container" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden">
             <h2 id="form-title" class="text-xl font-semibold text-gray-800 mb-4">Adicionar Nova Liga</h2>
             <form id="league-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="hidden" id="league-id">
+                
                 <div>
                     <label for="league-name" class="block text-sm font-medium text-gray-700">Nome</label>
                     <input type="text" id="league-name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
@@ -62,15 +67,22 @@
                     <label for="end-date" class="block text-sm font-medium text-gray-700">Data de Fim</label>
                     <input type="date" id="end-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 </div>
+                
                 <div class="md:col-span-2 flex justify-end space-x-2 mt-4">
                     <button type="button" id="cancel-form-btn" class="bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md shadow-md hover:bg-gray-400 transition-colors">Cancelar</button>
                     <button type="submit" class="bg-indigo-600 text-white font-medium py-2 px-4 rounded-md shadow-md hover:bg-indigo-700 transition-colors">Salvar</button>
                 </div>
             </form>
         </div>
+
+        <!-- Lista de Ligas -->
         <div id="leagues-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards de liga serão injetados aqui -->
         </div>
+
     </main>
+
+    <!-- Modal de Confirmação de Exclusão -->
     <div id="delete-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
         <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
             <h3 class="text-lg font-bold text-gray-900 mb-4">Confirmar Exclusão</h3>
@@ -81,8 +93,17 @@
             </div>
         </div>
     </div>
+    
     <script type="module" src="supabaseClient.js"></script>
     <script type="module" src="ligas.js"></script>
     <script type="module" src="logout.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const userType = localStorage.getItem('user_type');
+            if (userType === 'admin') {
+                document.getElementById('add-league-btn').classList.remove('hidden');
+            }
+        });
+    </script>
 </body>
 </html>

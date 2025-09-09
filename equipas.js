@@ -52,10 +52,20 @@ async function fetchTeams() {
 }
 
 function renderTeams(teamsToRender) {
+    const userType = localStorage.getItem('user_type');
     teamsTableBody.innerHTML = '';
     teamsToRender.forEach(team => {
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50';
+        let actionButtonsHtml = '';
+        
+        if (userType === 'admin') {
+             actionButtonsHtml = `
+                <button data-id="${team.id}" class="edit-btn text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                <button data-id="${team.id}" class="delete-btn text-red-600 hover:text-red-900">Excluir</button>
+            `;
+        }
+
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${team.nome}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${team.tipo === 'clube' ? 'Clube' : 'Seleção'}</td>
@@ -63,8 +73,7 @@ function renderTeams(teamsToRender) {
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${team.total_jogos}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${team.total_vitorias}</td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button data-id="${team.id}" class="edit-btn text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
-                <button data-id="${team.id}" class="delete-btn text-red-600 hover:text-red-900">Excluir</button>
+                ${actionButtonsHtml}
             </td>
         `;
         teamsTableBody.appendChild(row);
@@ -107,6 +116,11 @@ teamForm.addEventListener('submit', async (e) => {
 });
 
 teamsTableBody.addEventListener('click', async (e) => {
+    const userType = localStorage.getItem('user_type');
+    if (userType !== 'admin') {
+        return; // Impedir ações para não-administradores
+    }
+
     const target = e.target;
     const teamId = target.getAttribute('data-id');
 

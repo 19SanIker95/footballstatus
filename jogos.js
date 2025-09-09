@@ -88,6 +88,7 @@ function populateDropdowns() {
 }
 
 function renderJogos(jogosToRender) {
+    const userType = localStorage.getItem('user_type');
     matchesTableBody.innerHTML = '';
     if (jogosToRender.length === 0) {
         matchesTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-4">Nenhum jogo encontrado. Adicione um novo jogo.</td></tr>`;
@@ -96,6 +97,15 @@ function renderJogos(jogosToRender) {
     jogosToRender.forEach(jogo => {
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50';
+        let actionButtonsHtml = '';
+        
+        if (userType === 'admin') {
+             actionButtonsHtml = `
+                <button data-id="${jogo.id}" class="edit-btn text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                <button data-id="${jogo.id}" class="delete-btn text-red-600 hover:text-red-900">Excluir</button>
+            `;
+        }
+        
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${jogo.data_jogo}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${jogo.liga.nome}</td>
@@ -103,8 +113,7 @@ function renderJogos(jogosToRender) {
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${jogo.equipa_fora.nome}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">${jogo.resultado_casa} - ${jogo.resultado_fora}</td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button data-id="${jogo.id}" class="edit-btn text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
-                <button data-id="${jogo.id}" class="delete-btn text-red-600 hover:text-red-900">Excluir</button>
+                ${actionButtonsHtml}
             </td>
         `;
         matchesTableBody.appendChild(row);
@@ -145,6 +154,9 @@ cancelFormBtn.addEventListener('click', hideForm);
 
 matchForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const userType = localStorage.getItem('user_type');
+    if (userType !== 'admin') return;
+
     const id = matchIdInput.value;
     
     const matchData = {
@@ -175,6 +187,11 @@ matchForm.addEventListener('submit', async (e) => {
 
 
 matchesTableBody.addEventListener('click', async (e) => {
+    const userType = localStorage.getItem('user_type');
+    if (userType !== 'admin') {
+        return; // Impedir ações para não-administradores
+    }
+
     const target = e.target.closest('button');
     if (!target) return;
     
