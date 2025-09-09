@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipas - Football Stats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="index.html" class="flex items-center space-x-2 text-xl font-bold text-gray-800">
+                <span class="text-green-600">⚽</span> Football Stats
+            </a>
+            <div class="space-x-4 flex">
+                <a href="index.html" class="text-gray-600 hover:text-green-600 transition-colors">Dashboard</a>
+                <a href="equipas.html" class="text-green-600 font-semibold border-b-2 border-green-600 pb-1">Equipas</a>
+                <a href="ligas.html" class="text-gray-600 hover:text-green-600 transition-colors">Ligas</a>
+                <a href="jogos.html" class="text-gray-600 hover:text-green-600 transition-colors">Jogos</a>
+                <a href="status.html" class="text-gray-600 hover:text-green-600 transition-colors">Estatísticas</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Gestão de Equipas</h1>
+            <button id="add-team-btn" class="bg-green-600 text-white font-medium py-2 px-4 rounded-md shadow-md hover:bg-green-700 transition-colors">Adicionar Equipa</button>
+        </div>
+        
+        <!-- Formulário para adicionar/editar equipa -->
+        <div id="form-container" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden">
+            <h2 id="form-title" class="text-xl font-semibold text-gray-800 mb-4">Adicionar Nova Equipa</h2>
+            <form id="team-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="hidden" id="team-id">
+                
+                <div>
+                    <label for="team-name" class="block text-sm font-medium text-gray-700">Nome</label>
+                    <input type="text" id="team-name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                </div>
+                <div>
+                    <label for="team-type" class="block text-sm font-medium text-gray-700">Tipo</label>
+                    <select id="team-type" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                        <option value="clube">Clube</option>
+                        <option value="selecao">Seleção Nacional</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="home-stadium" class="block text-sm font-medium text-gray-700">Estádio</label>
+                    <input type="text" id="home-stadium" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                </div>
+                <div>
+                    <label for="founded-year" class="block text-sm font-medium text-gray-700">Ano de Fundação</label>
+                    <input type="number" id="founded-year" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                </div>
+                <div>
+                    <label for="squad-size" class="block text-sm font-medium text-gray-700">Tamanho do Plantel</label>
+                    <input type="number" id="squad-size" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                </div>
+                
+                <div class="md:col-span-2 flex justify-end space-x-2 mt-4">
+                    <button type="button" id="cancel-form-btn" class="bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md shadow-md hover:bg-gray-400 transition-colors">Cancelar</button>
+                    <button type="submit" class="bg-green-600 text-white font-medium py-2 px-4 rounded-md shadow-md hover:bg-green-700 transition-colors">Salvar</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabela de Equipas -->
+        <div id="teams-list" class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="px-6 py-4 flex justify-between items-center border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">Todas as Equipas</h2>
+                <input type="text" id="search-teams" placeholder="Pesquisar por nome..." class="rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+            </div>
+            
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ano de Fundação</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jogos</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vitórias</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="teams-table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Conteúdo dinâmico será injetado aqui -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div id="delete-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Confirmar Exclusão</h3>
+            <p class="text-sm text-gray-500">Tem certeza de que deseja excluir esta equipa? Esta ação não pode ser desfeita.</p>
+            <div class="flex justify-end space-x-2 mt-6">
+                <button id="cancel-delete-btn" class="bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md">Cancelar</button>
+                <button id="confirm-delete-btn" class="bg-red-600 text-white font-medium py-2 px-4 rounded-md">Excluir</button>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="supabaseClient.js"></script>
+    <script type="module" src="equipas.js"></script>
+</body>
+</html>
