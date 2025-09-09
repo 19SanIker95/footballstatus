@@ -8,6 +8,7 @@ const leagueGoalsChartEl = document.getElementById('leagueGoalsChart');
 
 let allEquipas = [];
 let allLigas = [];
+// Objeto para armazenar as instâncias dos gráficos
 let myCharts = {};
 
 const metricasEquipas = [
@@ -34,9 +35,8 @@ async function fetchData() {
     allLigas = ligasData;
 
     populateDropdowns();
-    // Funções de renderização de gráficos desativadas
     renderTeamPerformanceChart();
-    renderLeagueGoalsChart();
+    renderAverageGoalsChart();
 }
 
 function populateDropdowns() {
@@ -50,7 +50,8 @@ function populateDropdowns() {
     teamsSelect.addEventListener('change', () => {
         const selectedOptions = Array.from(teamsSelect.selectedOptions);
         if (selectedOptions.length > 5) {
-            alert("Você só pode selecionar até 5 equipas para comparação.");
+            // Utilizar uma forma de notificação sem o alert()
+            console.warn("Você só pode selecionar até 5 equipas para comparação.");
             selectedOptions[selectedOptions.length - 1].selected = false;
         }
         renderTeamPerformanceChart();
@@ -95,37 +96,27 @@ function renderTeamPerformanceChart() {
     });
 }
 
-function renderLeagueGoalsChart() {
+function renderAverageGoalsChart() {
     const dataByLeague = allLigas.map(liga => {
-        const totalGols = liga.jogos.reduce((sum, jogo) => sum + jogo.resultado_casa + jogo.resultado_fora, 0);
+        const totalGoals = liga.jogos.reduce((sum, jogo) => sum + jogo.resultado_casa + jogo.resultado_fora, 0);
+        const totalGames = liga.jogos.length;
+        const averageGoals = totalGames > 0 ? (totalGoals / totalGames).toFixed(2) : 0;
         return {
             name: liga.nome,
-            totalGols: totalGols
+            averageGoals: parseFloat(averageGoals)
         };
     });
 
     const labels = dataByLeague.map(item => item.name);
-    const data = dataByLeague.map(item => item.totalGols);
+    const data = dataByLeague.map(item => item.averageGoals);
 
     const chartData = {
         labels: labels,
         datasets: [{
-            label: 'Total de Golos',
+            label: 'Média de Golos por Jogo',
             data: data,
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.8)',
-                'rgba(54, 162, 235, 0.8)',
-                'rgba(255, 206, 86, 0.8)',
-                'rgba(75, 192, 192, 0.8)',
-                'rgba(153, 102, 255, 0.8)'
-            ],
-            borderColor: [
-                'rgba(255, 99, 132, 1)',
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 206, 86, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)'
-            ],
+            backgroundColor: 'rgba(75, 192, 192, 0.8)',
+            borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 1
         }]
     };
@@ -134,11 +125,16 @@ function renderLeagueGoalsChart() {
         myCharts.leagueGoals.destroy();
     }
     myCharts.leagueGoals = new Chart(leagueGoalsChartEl, {
-        type: 'doughnut',
+        type: 'bar',
         data: chartData,
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
         }
     });
 }
