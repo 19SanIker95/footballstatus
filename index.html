@@ -31,6 +31,7 @@
                 <a href="ligas.html" class="text-gray-600 hover:text-green-600 transition-colors">Ligas</a>
                 <a href="jogos.html" class="text-gray-600 hover:text-green-600 transition-colors">Jogos</a>
                 <a href="status.html" class="text-gray-600 hover:text-green-600 transition-colors">Estatísticas</a>
+                <a href="classificacao.html" class="text-gray-600 hover:text-green-600 transition-colors">Classificações</a>
                 <button id="logout-btn" class="text-red-600 hover:text-red-800 font-semibold transition-colors">Sair</button>
             </div>
         </div>
@@ -102,15 +103,6 @@
                 </div>
                 <div>
                     <div class="flex justify-between items-center text-sm text-gray-600">
-                        <span class="font-medium">Golos Sofridos</span>
-                        <span id="golos-sofridos-total">...</span>
-                    </div>
-                    <div class="w-full bg-red-200 rounded-full h-2.5 mt-1">
-                        <div id="golos-sofridos-bar" class="bg-red-600 h-2.5 rounded-full" style="width: 0%;"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="flex justify-between items-center text-sm text-gray-600">
                         <span class="font-medium">Taxa de Vitórias</span>
                         <span id="taxa-vitorias-percent">...</span>
                     </div>
@@ -118,12 +110,30 @@
                         <div id="taxa-vitorias-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%;"></div>
                     </div>
                 </div>
+                <div>
+                    <div class="flex justify-between items-center text-sm text-gray-600">
+                        <span class="font-medium">Média de Posse de Bola</span>
+                        <span id="media-posse-bola-percent">...</span>
+                    </div>
+                    <div class="w-full bg-yellow-200 rounded-full h-2.5 mt-1">
+                        <div id="media-posse-bola-bar" class="bg-yellow-500 h-2.5 rounded-full" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center text-sm text-gray-600">
+                        <span class="font-medium">Total de Jogos</span>
+                        <span id="total-jogos-performance">...</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-1">
+                        <div id="total-jogos-bar" class="bg-gray-600 h-2.5 rounded-full" style="width: 0%;"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Classificação das Equipas -->
         <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Classificação das Equipas</h2>
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Equipas com mais vitórias</h2>
             <div id="team-rankings" class="space-y-4">
                 <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
                     <div class="text-lg font-bold text-gray-500">1</div>

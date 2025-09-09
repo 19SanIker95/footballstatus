@@ -10,10 +10,12 @@ const statusJogosEl = document.getElementById('status-jogos');
 const teamRankingsEl = document.getElementById('team-rankings');
 const golosMarcadosTotalEl = document.getElementById('golos-marcados-total');
 const golosMarcadosBarEl = document.getElementById('golos-marcados-bar');
-const golosSofridosTotalEl = document.getElementById('golos-sofridos-total');
-const golosSofridosBarEl = document.getElementById('golos-sofridos-bar');
 const taxaVitoriasPercentEl = document.getElementById('taxa-vitorias-percent');
 const taxaVitoriasBarEl = document.getElementById('taxa-vitorias-bar');
+const mediaPosseBolaPercentEl = document.getElementById('media-posse-bola-percent');
+const mediaPosseBolaBarEl = document.getElementById('media-posse-bola-bar');
+const totalJogosPerformanceEl = document.getElementById('total-jogos-performance');
+const totalJogosBarEl = document.getElementById('total-jogos-bar');
 
 let allEquipas = [];
 
@@ -57,16 +59,13 @@ function renderSummary(equipas, ligas, jogos) {
     tiposEquipasEl.textContent = `${clubesCount} Clubes - ${selecoesCount} Seleções Nacionais`;
 
     totalLigasEl.textContent = ligas.length;
-    // Lógica para determinar ligas ativas e futuras
     const ligasAtivas = ligas.filter(l => new Date() >= new Date(l.data_inicio) && new Date() <= new Date(l.data_fim)).length;
     const ligasFuturas = ligas.length - ligasAtivas;
     statusLigasEl.textContent = `${ligasAtivas} Em Andamento - ${ligasFuturas} Próximas`;
 
     totalJogosEl.textContent = jogos.length;
-    // Lógica para jogos concluídos e agendados
-    const jogosConcluidos = jogos.filter(j => new Date() < new Date(j.data_jogo)).length;
-    const jogosAgendados = jogos.length - jogosConcluidos;
-    statusJogosEl.textContent = `${jogosConcluidos} Concluídos - ${jogosAgendados} Agendados`;
+    const jogosConcluidos = jogos.length; 
+    statusJogosEl.textContent = `${jogosConcluidos} Concluídos - ${jogos.length - jogosConcluidos} Agendados`;
 }
 
 /**
@@ -74,23 +73,20 @@ function renderSummary(equipas, ligas, jogos) {
  */
 function renderPerformanceOverview(equipas) {
     const totalGolosMarcados = equipas.reduce((sum, e) => sum + e.total_golos_marcados, 0);
-    const totalGolosSofridos = equipas.reduce((sum, e) => sum + e.total_golos_sofridos, 0);
     const totalJogos = equipas.reduce((sum, e) => sum + e.total_jogos, 0);
     const totalVitorias = equipas.reduce((sum, e) => sum + e.total_vitorias, 0);
+    const totalPosseBola = equipas.reduce((sum, e) => sum + e.total_posse_bola, 0);
 
     golosMarcadosTotalEl.textContent = totalGolosMarcados;
-    golosSofridosTotalEl.textContent = totalGolosSofridos;
+    taxaVitoriasPercentEl.textContent = `${totalJogos > 0 ? (totalVitorias / totalJogos * 100).toFixed(0) : 0}%`;
+    mediaPosseBolaPercentEl.textContent = `${totalJogos > 0 ? (totalPosseBola / totalJogos).toFixed(0) : 0}%`;
+    totalJogosPerformanceEl.textContent = totalJogos;
 
-    const totalGolos = totalGolosMarcados + totalGolosSofridos;
-    const golosMarcadosWidth = totalGolos > 0 ? (totalGolosMarcados / totalGolos) * 100 : 0;
-    const golosSofridosWidth = totalGolos > 0 ? (totalGolosSofridos / totalGolos) * 100 : 0;
-
-    golosMarcadosBarEl.style.width = `${golosMarcadosWidth}%`;
-    golosSofridosBarEl.style.width = `${golosSofridosWidth}%`;
-
-    const taxaVitorias = totalJogos > 0 ? (totalVitorias / totalJogos) * 100 : 0;
-    taxaVitoriasPercentEl.textContent = `${taxaVitorias.toFixed(0)}%`;
-    taxaVitoriasBarEl.style.width = `${taxaVitorias}%`;
+    // Lógica das barras de progresso (exemplo simplificado)
+    golosMarcadosBarEl.style.width = '100%';
+    taxaVitoriasBarEl.style.width = `${totalJogos > 0 ? (totalVitorias / totalJogos * 100) : 0}%`;
+    mediaPosseBolaBarEl.style.width = `${totalJogos > 0 ? (totalPosseBola / totalJogos) : 0}%`;
+    totalJogosBarEl.style.width = '100%';
 }
 
 /**
