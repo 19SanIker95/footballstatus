@@ -7,11 +7,9 @@ const errorMessage = document.getElementById('errorMessage');
 const standingsTable = document.getElementById('standingsTable');
 const leagueSelect = document.getElementById('league-select');
 
-let allEquipas = [];
-let allJogos = [];
-
 // Função para preencher o dropdown de ligas
 async function populateLeagueDropdown() {
+    // ALTERAÇÃO: Agora pedimos todos os dados da liga, incluindo as novas colunas
     const { data: ligas, error } = await supabase.from('ligas').select('*').order('nome', { ascending: true });
     if (error) {
         console.error("Erro a carregar ligas:", error);
@@ -23,12 +21,17 @@ async function populateLeagueDropdown() {
         const option = document.createElement('option');
         option.value = liga.id;
         option.textContent = liga.nome;
+        
+        // ALTERAÇÃO: Guardamos os valores de promoção/despromoção no próprio elemento da option
+        option.dataset.promocao = liga.num_promocao;
+        option.dataset.despromocao = liga.num_despromocao;
+
         leagueSelect.appendChild(option);
     });
 }
 
-// Função principal para carregar e renderizar a classificação
-async function fetchAndRenderStandings(leagueId) {
+// ALTERAÇÃO: A função agora aceita os "spots" (vagas) como parâmetros
+async function fetchAndRenderStandings(leagueId, promocaoSpots, despromocaoSpots) {
     loading.classList.remove('hidden');
     standingsTable.classList.add('hidden');
     errorMessage.classList.add('hidden');
@@ -39,18 +42,18 @@ async function fetchAndRenderStandings(leagueId) {
         return;
     }
 
+    // ALTERAÇÃO: Convertemos os valores recebidos para números (ou 0 se não existirem)
+    const numPromocao = parseInt(promocaoSpots, 10) || 0;
+    const numDespromocao = parseInt(despromocaoSpots, 10) || 0;
+
     try {
-        // Obter todas as equipas
         const { data: equipas, error: equipasError } = await supabase.from('equipas').select('*');
         if (equipasError) throw equipasError;
-        allEquipas = equipas;
 
-        // Obter todos os jogos
         const { data: jogos, error: jogosError } = await supabase.from('jogos').select('*');
         if (jogosError) throw jogosError;
-        allJogos = jogos;
 
-        const filteredJogos = allJogos.filter(jogo => String(jogo.liga_id) === String(leagueId));
+        const filteredJogos = jogos.filter(jogo => String(jogo.liga_id) === String(leagueId));
         
         if (filteredJogos.length === 0) {
             loading.classList.add('hidden');
@@ -66,17 +69,12 @@ async function fetchAndRenderStandings(leagueId) {
         });
 
         const teamStats = {};
-        allEquipas.forEach(equipa => {
+        equipas.forEach(equipa => {
             if (teamsInLeague.has(equipa.id)) {
                 teamStats[equipa.id] = {
                     team: equipa.nome,
-                    played: 0,
-                    won: 0,
-                    drawn: 0,
-                    lost: 0,
-                    goalsFor: 0,
-                    goalsAgainst: 0,
-                    points: 0
+                    played: 0, won: 0, drawn: 0, lost: 0,
+                    goalsFor: 0, goalsAgainst: 0, points: 0
                 };
             }
         });
@@ -88,13 +86,10 @@ async function fetchAndRenderStandings(leagueId) {
             if (homeTeamStats && awayTeamStats) {
                 homeTeamStats.played++;
                 awayTeamStats.played++;
-
                 homeTeamStats.goalsFor += jogo.resultado_casa;
                 homeTeamStats.goalsAgainst += jogo.resultado_fora;
-
                 awayTeamStats.goalsFor += jogo.resultado_fora;
                 awayTeamStats.goalsAgainst += jogo.resultado_casa;
-
                 if (jogo.resultado_casa > jogo.resultado_fora) {
                     homeTeamStats.won++;
                     awayTeamStats.lost++;
@@ -113,33 +108,25 @@ async function fetchAndRenderStandings(leagueId) {
         });
 
         const standings = Object.values(teamStats).sort((a, b) => {
-            if (b.points !== a.points) {
-                return b.points - a.points;
-            }
+            if (b.points !== a.points) return b.points - a.points;
             const goalDifferenceA = a.goalsFor - a.goalsAgainst;
             const goalDifferenceB = b.goalsFor - b.goalsAgainst;
-            if (goalDifferenceB !== goalDifferenceA) {
-                return goalDifferenceB - goalDifferenceA;
-            }
+            if (goalDifferenceB !== goalDifferenceA) return goalDifferenceB - goalDifferenceA;
             return b.goalsFor - a.goalsFor;
         });
 
-// Renderizar a tabela
         standings.forEach((team, index) => {
             const row = document.createElement('tr');
             let rowClass = 'bg-white border-b hover:bg-gray-50 transition-colors duration-200';
             const goalDifference = team.goalsFor - team.goalsAgainst;
-
-            // --- INÍCIO DA SECÇÃO DE DIAGNÓSTICO ---
-            // Esta linha irá mostrar-nos os valores que estão a ser usados na condição
-            console.log(`Equipa: ${team.team}, Index: ${index}, standings.length: ${standings.length}, Deve ser vermelho? ${index >= standings.length - 3}`);
-            // --- FIM DA SECÇÃO DE DIAGNÓSTICO ---
             
-            // Condição para as 3 primeiras posições (lugares de topo)
-            if (index < 3) {
+            // --- LÓGICA DE COLORAÇÃO DINÂMICA ---
+            // Pinta de azul se o índice estiver dentro do número de vagas de promoção
+            if (numPromocao > 0 && index < numPromocao) {
                 rowClass += ' bg-blue-100 font-semibold';
-            // Condição para as 3 últimas posições (zona de despromoção)
-            } else if (index >= standings.length - 3) {
+            // Pinta de vermelho se o índice estiver dentro do número de vagas de despromoção
+            } else if (numDespromocao > 0 && index >= standings.length - numDespromocao) {
+                // A cor aqui é um laranja/vermelho mais suave para melhor legibilidade
                 rowClass += ' bg-orange-100 font-semibold';
             }
 
@@ -171,9 +158,13 @@ async function fetchAndRenderStandings(leagueId) {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', populateLeagueDropdown);
-leagueSelect.addEventListener('change', (e) => {
-    fetchAndRenderStandings(e.target.value);
-});
 
-// Chamar a função inicial para popular o dropdown
-populateLeagueDropdown();
+// ALTERAÇÃO: O event listener agora lê os data attributes e passa-os para a função
+leagueSelect.addEventListener('change', (e) => {
+    const selectedOption = e.target.selectedOptions[0];
+    const leagueId = selectedOption.value;
+    const promocao = selectedOption.dataset.promocao;
+    const despromocao = selectedOption.dataset.despromocao;
+    
+    fetchAndRenderStandings(leagueId, promocao, despromocao);
+});
