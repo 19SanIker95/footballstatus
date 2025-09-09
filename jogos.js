@@ -70,7 +70,6 @@ async function fetchData() {
 }
 
 function populateDropdowns() {
-    // Popula dropdown de Ligas
     leagueSelect.innerHTML = '<option value="">Selecione a liga...</option>';
     allLigas.forEach(liga => {
         const option = document.createElement('option');
@@ -79,16 +78,8 @@ function populateDropdowns() {
         leagueSelect.appendChild(option);
     });
 
-    // Popula dropdown de Equipas
     const populateTeams = (selectedLeagueId) => {
-        const filteredTeams = allEquipas.filter(equipa => {
-             // O campo liga_id ainda não existe na tabela 'equipas', então esta lógica é um placeholder
-             // para o caso de ter sido adicionado no futuro.
-             // No momento, equipas não estão diretamente ligadas a ligas na BD.
-             return true; 
-        });
-
-        const teamOptions = filteredTeams.map(equipa => `<option value="${equipa.id}">${equipa.nome}</option>`).join('');
+        const teamOptions = allEquipas.map(equipa => `<option value="${equipa.id}">${equipa.nome}</option>`).join('');
         homeTeamSelect.innerHTML = `<option value="">Selecione a equipa...</option>${teamOptions}`;
         awayTeamSelect.innerHTML = `<option value="">Selecione a equipa...</option>${teamOptions}`;
     };
@@ -120,16 +111,13 @@ function renderJogos(jogosToRender) {
     });
 }
 
-// Lógica de atualização de estatísticas (deve ser chamada após adicionar/editar/excluir um jogo)
 async function updateTeamStats(teamId, matchData, isHomeTeam) {
-    // Busque as estatísticas atuais da equipa
     const { data: team, error: teamFetchError } = await supabase.from('equipas').select('*').eq('id', teamId).single();
     if (teamFetchError) {
         console.error('Erro ao buscar equipa para atualização de stats:', teamFetchError);
         return;
     }
     
-    // Calcule as novas estatísticas
     const newStats = {
         total_jogos: team.total_jogos + 1,
         total_vitorias: team.total_vitorias + (isHomeTeam ? (matchData.resultado_casa > matchData.resultado_fora ? 1 : 0) : (matchData.resultado_fora > matchData.resultado_casa ? 1 : 0)),
@@ -137,22 +125,15 @@ async function updateTeamStats(teamId, matchData, isHomeTeam) {
         total_derrotas: team.total_derrotas + (isHomeTeam ? (matchData.resultado_casa < matchData.resultado_fora ? 1 : 0) : (matchData.resultado_fora < matchData.resultado_casa ? 1 : 0)),
         total_golos_marcados: team.total_golos_marcados + (isHomeTeam ? matchData.resultado_casa : matchData.resultado_fora),
         total_golos_sofridos: team.total_golos_sofridos + (isHomeTeam ? matchData.resultado_fora : matchData.resultado_casa),
-        total_cantos: team.total_cantos + (isHomeTeam ? matchData.cantos_casa : matchData.cantos_fora),
         total_posse_bola: team.total_posse_bola + (isHomeTeam ? matchData.posse_bola_casa : matchData.posse_bola_fora),
-        total_passes: team.total_passes + (isHomeTeam ? matchData.total_passes_casa : matchData.total_passes_fora),
-        total_remates_enquadrados: team.total_remates_enquadrados + (isHomeTeam ? matchData.remates_enquadrados_casa : matchData.remates_enquadrados_fora),
-        total_cartoes_amarelos: team.total_cartoes_amarelos + (isHomeTeam ? matchData.cartoes_amarelos_casa : matchData.cartoes_amarelos_fora),
-        total_cartoes_vermelhos: team.total_cartoes_vermelhos + (isHomeTeam ? matchData.cartoes_vermelhos_casa : matchData.cartoes_vermelhos_fora),
     };
     
-    // Atualize as estatísticas no Supabase
     const { error: updateError } = await supabase.from('equipas').update(newStats).eq('id', teamId);
     if (updateError) {
         console.error('Erro ao atualizar estatísticas da equipa:', updateError);
     }
 }
 
-// Event Listeners
 addMatchBtn.addEventListener('click', () => {
     formTitle.textContent = 'Adicionar Novo Jogo';
     matchForm.reset();
@@ -175,29 +156,16 @@ matchForm.addEventListener('submit', async (e) => {
         resultado_fora: parseInt(awayScoreInput.value),
         posse_bola_casa: parseInt(homePossessionInput.value),
         posse_bola_fora: parseInt(awayPossessionInput.value),
-        cantos_casa: 0, // Campos não presentes no formulário, a serem adicionados
-        cantos_fora: 0,
-        cartoes_amarelos_casa: 0,
-        cartoes_amarelos_fora: 0,
-        cartoes_vermelhos_casa: 0,
-        cartoes_vermelhos_fora: 0,
-        total_passes_casa: 0,
-        total_passes_fora: 0,
-        remates_enquadrados_casa: 0,
-        remates_enquadrados_fora: 0,
     };
 
     if (id) {
-        // Lógica de edição
         const { error } = await supabase.from('jogos').update(matchData).eq('id', id);
         if (error) console.error('Erro ao atualizar jogo:', error);
     } else {
-        // Adicionar novo jogo
         const { error } = await supabase.from('jogos').insert([matchData]);
         if (error) console.error('Erro ao adicionar jogo:', error);
     }
 
-    // Atualize as estatísticas das equipas
     await updateTeamStats(matchData.equipa_casa_id, matchData, true);
     await updateTeamStats(matchData.equipa_fora_id, matchData, false);
 
@@ -252,7 +220,6 @@ searchMatchesInput.addEventListener('input', () => {
     renderJogos(filteredJogos);
 });
 
-// Inicialização
 async function init() {
     const data = await fetchData();
     allLigas = data.ligas;

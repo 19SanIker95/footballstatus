@@ -10,12 +10,12 @@ loginForm.addEventListener('submit', async (e) => {
     const email = emailInput.value;
     const password = passwordInput.value;
     
-    // Verificação simples contra a nossa tabela 'utilizadores'
+    // Verificação simples contra a sua tabela 'utilizadores'
     const { data, error } = await supabase
         .from('utilizadores')
         .select('*')
         .eq('email', email)
-        .eq('password', password) // **ATENÇÃO: Em produção, nunca armazene senhas sem criptografia!**
+        .eq('password', password)
         .single();
         
     if (error || !data) {
@@ -23,6 +23,8 @@ loginForm.addEventListener('submit', async (e) => {
         errorMessageEl.classList.remove('hidden');
     } else {
         errorMessageEl.classList.add('hidden');
+        // Armazena um token simples no localStorage para indicar que o utilizador está autenticado
+        localStorage.setItem('auth_token', data.id);
         // Redireciona para o dashboard após o login
         window.location.href = 'index.html';
     }

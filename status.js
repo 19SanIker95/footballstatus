@@ -16,9 +16,6 @@ const metricasEquipas = [
     { value: 'total_golos_marcados', label: 'Golos Marcados' },
     { value: 'total_golos_sofridos', label: 'Golos Sofridos' },
     { value: 'total_posse_bola', label: 'Posse de Bola (Total)' },
-    { value: 'total_cartoes_amarelos', label: 'Cartões Amarelos' },
-    { value: 'total_cartoes_vermelhos', label: 'Cartões Vermelhos' },
-    { value: 'total_remates_enquadrados', label: 'Remates Enquadrados' },
 ];
 
 async function fetchData() {
@@ -37,6 +34,7 @@ async function fetchData() {
     allLigas = ligasData;
 
     populateDropdowns();
+    // Funções de renderização de gráficos desativadas
     renderTeamPerformanceChart();
     renderLeagueGoalsChart();
 }
