@@ -3,297 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poker Starter Pack v3</title>
+    <title>Guia Comparativo de Mãos (GTO)</title>
     <style>
-        /* Estilos Gerais (semelhantes à v2) */
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; color: #333; line-height: 1.6; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h1, h2 { text-align: center; color: #1c2b4d; }
+        /* Estilos Gerais */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px; /* Aumentado para acomodar os dois quadros */
+            margin: auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #1c2b4d;
+        }
 
-        /* Sistema de Abas */
-        .tab-nav { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
-        .tab-button { padding: 10px 20px; cursor: pointer; border: none; background: none; font-size: 16px; font-weight: 600; color: #555; position: relative; bottom: -2px; }
-        .tab-button.active { color: #007bff; border-bottom: 2px solid #007bff; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        /* --- NOVOS ESTILOS PARA O LAYOUT COMPARATIVO --- */
+        .charts-container {
+            display: flex;
+            justify-content: space-around;
+            gap: 30px;
+            flex-wrap: wrap; /* Permite que os itens quebrem para a linha de baixo */
+        }
+        .chart-wrapper {
+            flex: 1; /* Faz com que cada quadro tente ocupar o mesmo espaço */
+            min-width: 450px; /* Largura mínima para cada quadro antes de quebrar a linha */
+        }
         
-        /* Descrição */
-        .description-box { position: relative; background-color: #e9f5ff; border-left: 4px solid #007bff; padding: 15px; margin-top: 20px; border-radius: 4px; font-size: 14px; }
+        /* Media Query para ecrãs mais pequenos (telemóveis) */
+        @media (max-width: 980px) {
+            .charts-container {
+                flex-direction: column; /* Coloca os quadros um debaixo do outro */
+                align-items: center;
+            }
+            .chart-wrapper {
+                min-width: 300px; /* Ajusta a largura mínima */
+                width: 100%;
+            }
+        }
+        /* --- FIM DOS NOVOS ESTILOS --- */
+
+        .description-box {
+            position: relative;
+            background-color: #e9f5ff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin-top: 30px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
         .description-box h4 { margin-top: 0; color: #0056b3; }
+        .description-box ul { padding-left: 20px; }
+        .description-box li { margin-bottom: 10px; }
+        .description-box strong { color: #0056b3; }
 
-        /* Calculadora Visual */
-        .equity-calculator-layout { display: flex; flex-direction: column; align-items: center; gap: 20px; }
-        .player-hand-container, .board-container { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 8px; text-align: center; }
-        .cards-display { display: flex; justify-content: center; gap: 10px; margin-top: 10px; min-height: 70px; }
-        .card, .card-placeholder { width: 50px; height: 70px; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; background: #f8f9fa; }
-        .card.red { color: #dc3545; } .card.black { color: #212529; }
-        .card-placeholder { border-style: dashed; }
-        .card-selector-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .card-selector { background: white; padding: 20px; border-radius: 10px; display: grid; grid-template-columns: repeat(13, 1fr); gap: 5px; width: auto; max-width: 90vw; }
-        .card-selector .card { width: 40px; height: 60px; font-size: 16px; }
-        .card-selector .card.disabled { background-color: #e9ecef; color: #adb5bd; cursor: not-allowed; opacity: 0.6; }
-        .clear-button { background-color: #ffc107; color: #212529; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-
-        /* Tabela GTO */
-        .gto-controls { text-align: center; margin-bottom: 20px; }
-        .gto-controls select { padding: 8px; font-size: 16px; margin: 0 10px; }
-        .hand-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 4px; max-width: 600px; margin: auto; }
-        .hand-cell { padding: 8px 0; text-align: center; border-radius: 4px; font-weight: bold; font-size: 14px; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s ease; }
-        .hand-cell:hover { transform: scale(1.1); } /* Efeito de hover */
-        .hand-cell.fold { background-color: #6c757d; } .hand-cell.call { background-color: #28a745; } .hand-cell.raise { background-color: #dc3545; }
-        .legend { display: flex; justify-content: center; margin-top: 20px; gap: 20px; } .legend-item { display: flex; align-items: center; }
-        .legend-color { width: 20px; height: 20px; margin-right: 8px; border-radius: 4px;}
+        .hand-grid {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 4px;
+            margin: auto;
+        }
+        .hand-cell {
+            padding: 5px 0;
+            text-align: center;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: clamp(10px, 2.5vw, 14px); /* Fonte responsiva */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 25px;
+        }
+        .hand-cell.fold { background-color: #6c757d; }
+        .hand-cell.call { background-color: #28a745; }
+        .hand-cell.raise { background-color: #dc3545; }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .legend-item { display: flex; align-items: center; }
+        .legend-color { width: 20px; height: 20px; margin-right: 8px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Poker Starter Pack v3</h1>
-
-    <div class="tab-nav">
-        <button id="tab-btn-equity" class="tab-button" onclick="showTab('equity')">Calculadora de Equidade</button>
-        <button id="tab-btn-gto" class="tab-button" onclick="showTab('gto')">Tabelas de Mãos (GTO)</button>
+    <h1>Guia Comparativo de Mãos (GTO)</h1>
+    
+    <div class="legend">
+        <div class="legend-item"><div class="legend-color" style="background: #dc3545;"></div> Aumentar (Raise)</div>
+        <div class="legend-item"><div class="legend-color" style="background: #28a745;"></div> Pagar (Call)</div>
+        <div class="legend-item"><div class="legend-color" style="background: #6c757d;"></div> Desistir (Fold)</div>
     </div>
 
-    <div id="equity" class="tab-content">
-        <h2>Calculadora de Equidade Visual</h2>
-        <div class="equity-calculator-layout">
-            <div class="player-hand-container">
-                <h3>Sua Mão (Herói)</h3>
-                <div id="hero-cards" class="cards-display"></div>
-                <button class="clear-button" onclick="clearCards('hero')">Limpar</button>
-            </div>
-            <div class="player-hand-container">
-                <h3>Mão do Vilão</h3>
-                <div id="villain-cards" class="cards-display"></div>
-                 <button class="clear-button" onclick="clearCards('villain')">Limpar</button>
-            </div>
-            <div class="board-container">
-                <h3>Mesa (Board)</h3>
-                <div id="board-cards" class="cards-display"></div>
-                 <button class="clear-button" onclick="clearCards('board')">Limpar</button>
-            </div>
+    <div class="charts-container">
+        <div class="chart-wrapper">
+            <h2>Cenário 1: Posição Button (BTN)</h2>
+            <p style="text-align: center;"><strong>Situação:</strong> Ninguém abriu o pote (Unopened)</p>
+            <div class="hand-grid" id="handGridBtn"></div>
         </div>
-        <div class="description-box">
-            <h4>Como Usar a Calculadora?</h4>
-            <p>Clique num dos espaços vazios para escolher as cartas. Para preencher rapidamente a sua mão, vá ao separador "Tabelas de Mãos (GTO)" e clique numa das mãos da grelha.</p>
+
+        <div class="chart-wrapper">
+            <h2>Cenário 2: Posição Big Blind (BB)</h2>
+            <p style="text-align: center;"><strong>Situação:</strong> Jogador UTG fez Raise</p>
+            <div class="hand-grid" id="handGridBb"></div>
         </div>
     </div>
 
-    <div id="gto" class="tab-content">
-        <h2>Guia de Mãos Iniciais (Clique para selecionar)</h2>
-        <div class="gto-controls">
-            <label for="position">Sua Posição:</label>
-            <select id="position" onchange="updateGrid()">
-                <option value="BTN">Button (BTN)</option>
-                <option value="BB">Big Blind (BB)</option>
-            </select>
-            <label for="situation">Situação:</label>
-            <select id="situation" onchange="updateGrid()">
-                <option value="unopened">Todos desistiram (Unopened)</option>
-                <option value="utg_raise">UTG fez Raise</option>
-            </select>
-        </div>
-        <div class="hand-grid" id="handGrid"></div>
-        <div class="legend">
-             <div class="legend-item"><div class="legend-color" style="background: #dc3545;"></div> Aumentar (Raise)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #28a745;"></div> Pagar (Call)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #6c757d;"></div> Desistir (Fold)</div>
-        </div>
-        <div class="description-box">
-            <h4>Como Usar Esta Tabela?</h4>
-            <p>Selecione o cenário e veja a estratégia recomendada. <strong>Clique numa mão na grelha</strong> para a carregar automaticamente na calculadora e analisar as suas probabilidades.</p>
-        </div>
+    <div class="description-box">
+        <h4>Como Ler os Quadros?</h4>
+        <ul>
+            <li>Cada quadro representa uma situação diferente. Repare como a estratégia muda drasticamente dependendo da sua posição e da ação dos outros jogadores.</li>
+            <li>No **Cenário 1 (Button)**, você está em posição tardia e joga de forma muito mais agressiva (muito vermelho), pois tem a vantagem posicional.</li>
+            <li>No **Cenário 2 (Big Blind)**, você está a defender-se contra um raise de uma posição inicial (que representa força). A sua estratégia é mais defensiva, com mais "Calls" (verde) e "Folds" (cinzento).</li>
+            <li><strong>K8s (suited)</strong> significa Rei e Oito do <strong>mesmo naipe</strong> (ex: K♥️ 8♥️). Têm mais valor por poderem fazer flush.</li>
+            <li><strong>K8o (offsuit)</strong> significa Rei e Oito de <strong>naipes diferentes</strong> (ex: K♥️ 8♣️).</li>
+        </ul>
     </div>
-</div>
-
-<div id="cardSelectorModal" class="card-selector-modal">
-    <div id="cardSelector" class="card-selector"></div>
 </div>
 
 <script>
-// --- LÓGICA DO SISTEMA DE ABAS ---
-function showTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-    document.getElementById(tabName).classList.add('active');
-    document.getElementById(`tab-btn-${tabName}`).classList.add('active');
-}
-
-// --- LÓGICA DA CALCULADORA DE EQUIDADE VISUAL ---
-const SUITS = { 's': '♠️', 'h': '♥️', 'd': '♦️', 'c': '♣️' };
-const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
-let selectedCards = { hero: [null, null], villain: [null, null], board: [null, null, null, null, null] };
-let currentSelectorContext = { type: null, index: -1 };
-const modal = document.getElementById('cardSelectorModal');
-const cardSelector = document.getElementById('cardSelector');
-
-function generateCardSelector() {
-    cardSelector.innerHTML = '';
-    for (const suitKey in SUITS) {
-        for (const rank of RANKS) {
-            const card = document.createElement('div');
-            const cardName = rank + suitKey;
-            card.id = `selector-${cardName}`;
-            card.className = 'card';
-            card.dataset.card = cardName;
-            card.innerHTML = `${rank}<br>${SUITS[suitKey]}`;
-            if (['h', 'd'].includes(suitKey)) card.classList.add('red'); else card.classList.add('black');
-            card.onclick = () => selectCard(cardName);
-            cardSelector.appendChild(card);
-        }
-    }
-}
-
-function openCardSelector(type, index) {
-    currentSelectorContext = { type, index };
-    updateDisabledCards();
-    modal.style.display = 'flex';
-}
-
-function closeCardSelector() { modal.style.display = 'none'; }
-
-function selectCard(cardName) {
-    const { type, index } = currentSelectorContext;
-    if (type && index > -1) {
-        const oldCard = selectedCards[type][index];
-        if (oldCard) document.getElementById(`selector-${oldCard}`).classList.remove('disabled');
-        selectedCards[type][index] = cardName;
-        updateDisplay();
-        closeCardSelector();
-    }
-}
-
-function updateDisplay() {
-    for (const type in selectedCards) {
-        const container = document.getElementById(`${type}-cards`);
-        container.innerHTML = '';
-        const cards = selectedCards[type];
-        for (let i = 0; i < cards.length; i++) {
-            const cardName = cards[i];
-            let cardElement;
-            if (cardName) {
-                cardElement = document.createElement('div');
-                cardElement.className = 'card';
-                const rank = cardName.slice(0, -1);
-                const suitKey = cardName.slice(-1);
-                cardElement.innerHTML = `${rank}<br>${SUITS[suitKey]}`;
-                if (['h', 'd'].includes(suitKey)) cardElement.classList.add('red'); else cardElement.classList.add('black');
-            } else {
-                cardElement = document.createElement('div');
-                cardElement.className = 'card-placeholder';
-            }
-            cardElement.onclick = () => openCardSelector(type, i);
-            container.appendChild(cardElement);
-        }
-    }
-}
-
-function updateDisabledCards() {
-    const allSelected = Object.values(selectedCards).flat();
-    document.querySelectorAll('.card-selector .card').forEach(cardEl => {
-        if (allSelected.includes(cardEl.dataset.card)) cardEl.classList.add('disabled');
-        else cardEl.classList.remove('disabled');
-    });
-}
-
-function clearCards(type) {
-    selectedCards[type].fill(null);
-    updateDisplay();
-}
-
-window.onclick = (event) => { if (event.target == modal) closeCardSelector(); };
-
 // --- LÓGICA DA GRELHA GTO ---
-const handGrid = document.getElementById('handGrid');
+const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 const gtoStrategies = {
-    'BTN_unopened': {'AA':'r','KK':'r','QQ':'r','JJ':'r','TT':'r','99':'r','88':'r','77':'r','66':'r','55':'c','44':'c','33':'c','22':'c','AKs':'r','AQs':'r','AJs':'r','ATs':'r','A9s':'r','A8s':'r','A7s':'r','A6s':'r','A5s':'r','A4s':'r','A3s':'r','A2s':'r','AKo':'r','KQs':'r','KJs':'r','KTs':'r','K9s':'r','K8s':'c','K7s':'c','K6s':'c','K5s':'f','AQo':'r','KQo':'r','QJs':'r','QTs':'r','Q9s':'c','Q8s':'f','AJo':'r','KJo':'r','QJo':'r','JTs':'r','J9s':'c','J8s':'c','ATo':'r','KTo':'r','QTo':'c','JTo':'c','T9s':'r','T8s':'c','A9o':'r','A8o':'r','A7o':'c','A5o':'r','98s':'c','87s':'c','76s':'c','65s':'c','54s':'f'},
-    'BB_utg_raise': {'AA':'r','KK':'r','QQ':'r','JJ':'r','TT':'c','99':'c','88':'c','77':'c','66':'c','55':'c','44':'c','33':'c','22':'c','AKs':'r','AQs':'c','AJs':'c','ATs':'c','A9s':'c','A8s':'c','A7s':'c','A6s':'c','A5s':'r','A4s':'c','AKo':'r','KQs':'r','KJs':'c','KTs':'c','AQo':'c','KQo':'c','QJs':'c','QTs':'c','AJo':'c','JTs':'c','T9s':'c','98s':'c','87s':'c','76s':'c','65s':'c'}
+    'BTN_unopened': {'AA':'r','KK':'r','QQ':'r','JJ':'r','TT':'r','99':'r','88':'r','77':'r','66':'r','55':'r','44':'r','33':'r','22':'r','AKs':'r','AQs':'r','AJs':'r','ATs':'r','A9s':'r','A8s':'r','A7s':'r','A6s':'r','A5s':'r','A4s':'r','A3s':'r','A2s':'r','AKo':'r','KQs':'r','KJs':'r','KTs':'r','K9s':'r','K8s':'r','K7s':'r','K6s':'c','K5s':'c','K4s':'c','K3s':'c','K2s':'c','AQo':'r','KQo':'r','QJs':'r','QTs':'r','Q9s':'r','Q8s':'c','Q7s':'c','AJo':'r','KJo':'r','QJo':'r','JTs':'r','J9s':'r','J8s':'c','J7s':'c','ATo':'r','KTo':'r','QTo':'r','JTo':'r','T9s':'r','T8s':'r','T7s':'c','A9o':'r','A8o':'r','A7o':'r','A6o':'c','A5o':'r','A4o':'r','A3o':'r','A2o':'r','98s':'r','97s':'c','96s':'c','87s':'r','86s':'c','76s':'r','75s':'c','65s':'r','64s':'c','54s':'r','53s':'c','43s':'c'},
+    'BB_utg_raise': {'AA':'r','KK':'r','QQ':'r','JJ':'r','TT':'c','99':'c','88':'c','77':'c','66':'c','55':'c','44':'c','33':'c','22':'c','AKs':'r','AQs':'r','AJs':'c','ATs':'c','A9s':'c','A8s':'c','A7s':'c','A6s':'c','A5s':'r','A4s':'r','A3s':'c','A2s':'c','AKo':'r','KQs':'r','KJs':'c','KTs':'c','K9s':'c','K8s':'c','K7s':'c','K6s':'c','AQo':'c','KQo':'c','QJs':'c','QTs':'c','Q9s':'c','AJo':'c','KJo':'c','QJo':'c','JTs':'c','J9s':'c','ATo':'c','KTo':'f','QTo':'f','JTo':'c','T9s':'c','T8s':'c','A9o':'f','98s':'c','97s':'c','A8o':'f','87s':'c','86s':'c','A7o':'f','76s':'c','75s':'c','A5o':'f','65s':'c','64s':'c','A4o':'f','54s':'c'}
 };
 
-function updateGrid() {
-    handGrid.innerHTML = '';
-    const position = document.getElementById('position').value;
-    const situation = document.getElementById('situation').value;
-    const strategy = gtoStrategies[`${position}_${situation}`] || {};
+/**
+ * Função genérica para gerar uma grelha de mãos num contentor específico
+ * @param {string} containerId - O ID do elemento div onde a grelha será inserida
+ * @param {string} strategyKey - A chave da estratégia a ser usada (ex: 'BTN_unopened')
+ */
+function generateGrid(containerId, strategyKey) {
+    const handGrid = document.getElementById(containerId);
+    const strategy = gtoStrategies[strategyKey] || {};
+    handGrid.innerHTML = ''; // Limpa a grelha antes de a preencher
+    
     for (let i = 0; i < RANKS.length; i++) {
         for (let j = 0; j < RANKS.length; j++) {
             const cell = document.createElement('div');
             cell.classList.add('hand-cell');
-            let hand, action, key, handText;
-            if (i < j) { // Suited
-                hand = { r1: RANKS[i], r2: RANKS[j], type: 's' };
-                key = `${hand.r1}${hand.r2}s`;
-                handText = key;
-            } else if (i > j) { // Offsuit
-                hand = { r1: RANKS[j], r2: RANKS[i], type: 'o' };
-                key = `${hand.r1}${hand.r2}o`;
-                handText = key;
-            } else { // Pairs
-                hand = { r1: RANKS[i], r2: RANKS[j], type: 'p' };
-                key = `${hand.r1}${hand.r2}`;
-                handText = key;
-            }
+            let key, handText;
             
-            action = strategy[key] || 'f';
+            if (i < j) { // Suited
+                key = `${RANKS[i]}${RANKS[j]}s`;
+            } else if (i > j) { // Offsuit
+                key = `${RANKS[j]}${RANKS[i]}o`;
+            } else { // Pairs
+                key = `${RANKS[i]}${RANKS[j]}`;
+            }
+            handText = key;
+            
+            const action = strategy[key] || 'f';
             cell.textContent = handText;
-            cell.dataset.hand = JSON.stringify(hand); // Guarda a info da mão na célula
-            cell.onclick = () => selectHeroHandFromGrid(cell.dataset.hand);
-
+            
             if(action === 'r') cell.classList.add('raise');
             else if(action === 'c') cell.classList.add('call');
             else cell.classList.add('fold');
+            
             handGrid.appendChild(cell);
         }
     }
 }
 
-// --- NOVA FUNÇÃO DE INTEGRAÇÃO ---
-function selectHeroHandFromGrid(handData) {
-    const hand = JSON.parse(handData);
-    const { r1, r2, type } = hand;
-    
-    const allSelected = Object.values(selectedCards).flat();
-    let card1, card2;
-    
-    // Tenta encontrar naipes disponíveis
-    const suitCombos = {
-        's': [['h','h'], ['d','d'], ['c','c'], ['s','s']], // Suited
-        'o': [['h','d'], ['c','s'], ['h','c'], ['d','s']], // Offsuit
-        'p': [['h','d'], ['c','s'], ['h','c'], ['d','s']]  // Pairs
-    };
-
-    let foundCombo = false;
-    for(const combo of suitCombos[type]) {
-        card1 = r1 + combo[0];
-        card2 = r2 + combo[1];
-        if (!allSelected.includes(card1) && !allSelected.includes(card2)) {
-            foundCombo = true;
-            break;
-        }
-    }
-
-    if (!foundCombo) {
-        alert("Não foi possível selecionar esta mão pois as cartas já estão em uso pelo Vilão ou pela Mesa.");
-        return;
-    }
-
-    // Limpa a mão do herói e define a nova
-    clearCards('hero');
-    selectedCards.hero = [card1, card2];
-
-    // Muda para a aba da calculadora e atualiza a interface
-    showTab('equity');
-    updateDisplay();
-}
-
-
-// --- INICIALIZAÇÃO ---
+// Inicializar as duas grelhas quando a página carrega
 document.addEventListener('DOMContentLoaded', () => {
-    generateCardSelector();
-    updateDisplay();
-    updateGrid();
-    showTab('equity'); // Começa na aba da calculadora
+    generateGrid('handGridBtn', 'BTN_unopened');
+    generateGrid('handGridBb', 'BB_utg_raise');
 });
 </script>
 
